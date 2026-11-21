@@ -84,7 +84,7 @@ class NovaSessao(BaseModel):
 
 
 class NovaFala(BaseModel):
-    papel: str = Field(description="'pessoa' ou 'clara'")
+    papel: str = Field(description="'pessoa' ou 'gabriel'")
     texto: str
     brincadeira: Optional[str] = Field(
         default=None, description="'fluencia' | 'memoria' | 'orientacao'"

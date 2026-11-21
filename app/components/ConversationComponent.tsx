@@ -46,7 +46,7 @@ import { QuickstartTranscriptPanel } from './QuickstartTranscriptPanel';
 import type { ConversationComponentProps } from '@/types/conversation';
 // FEITO NO HACKATHON
 import { useProsa } from '@/hooks/use-prosa';
-import { PALAVRAS_MEMORIA } from '@/lib/clara';
+import { PALAVRAS_MEMORIA } from '@/lib/gabriel';
 
 // Cap the displayed issues list to avoid overwhelming the UI during a cascade of errors.
 const MAX_CONNECTION_ISSUES = 6;

@@ -273,7 +273,7 @@ def medir(
     """
     Agrega as medidas de texto de uma conversa.
 
-    falas_usuario: uma string por turno de fala da pessoa (não da Clara).
+    falas_usuario: uma string por turno de fala da pessoa (não do Gabriel).
     Os campos texto_* são os trechos das brincadeiras, quando houve.
     """
     turnos = [f for f in falas_usuario if f and f.strip()]

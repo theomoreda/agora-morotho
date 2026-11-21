@@ -22,8 +22,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { stepCountIs, streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
-import { CLARA_PROMPT } from '@/lib/clara';
-import { ferramentasDaClara, respostaRapidaFluencia } from '@/lib/brincadeiras';
+import { GABRIEL_PROMPT } from '@/lib/gabriel';
+import { ferramentasDoGabriel, respostaRapidaFluencia } from '@/lib/brincadeiras';
 
 type MensagemChat = { role: string; content: unknown };
 
@@ -34,7 +34,7 @@ type CorpoChat = {
   [chave: string]: unknown;
 };
 
-/** Quantos passos de ferramenta a Clara pode dar antes de responder. */
+/** Quantos passos de ferramenta o Gabriel pode dar antes de responder. */
 const MAX_PASSOS = 4;
 
 function codificarSse(
@@ -124,7 +124,7 @@ export async function prosaChatCompletions(
   const modeloResposta = corpo.model ?? modelId;
 
   // ── Caminho rápido: minuto dos bichos ───────────────────────────────────
-  // Durante a brincadeira a Clara só diz "Isso!", "Continue...". Passar isso
+  // Durante a brincadeira o Gabriel só diz "Isso!", "Continue...". Passar isso
   // pelo LLM custaria centenas de ms por turno e quebraria o ritmo. Aqui a
   // resposta sai sem nenhuma chamada de modelo.
   const rapida = await respostaRapidaFluencia(sessaoId);
@@ -149,20 +149,20 @@ export async function prosaChatCompletions(
   const mensagens = (corpo.messages ?? []) as MensagemChat[];
 
   // A Agora normalmente já envia o system prompt (vem do campo `instructions`
-  // do join). Se por qualquer motivo não vier, a Clara não pode virar um
+  // do join). Se por qualquer motivo não vier, o Gabriel não pode virar um
   // assistente genérico falando inglês — então garantimos a persona aqui.
   const temSystem = mensagens.some((m) => m.role === 'system');
   const mensagensFinais = temSystem
     ? mensagens
-    : [{ role: 'system', content: CLARA_PROMPT }, ...mensagens];
+    : [{ role: 'system', content: GABRIEL_PROMPT }, ...mensagens];
 
   const resultado = streamText({
     model: openai(modelId),
     messages: mensagensFinais as NonNullable<
       Parameters<typeof streamText>[0]['messages']
     >,
-    tools: ferramentasDaClara(sessaoId),
-    // Deixa a Clara chamar uma ferramenta e depois falar, no mesmo turno.
+    tools: ferramentasDoGabriel(sessaoId),
+    // Deixa o Gabriel chamar uma ferramenta e depois falar, no mesmo turno.
     stopWhen: stepCountIs(MAX_PASSOS),
   });
 

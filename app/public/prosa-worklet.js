@@ -4,7 +4,7 @@
  * FEITO NO HACKATHON (UNMUTE by Agora, 21-22/11/2026).
  *
  * Roda na thread de áudio (não na principal), então não engasga a interface
- * nem a conversa em tempo real com a Clara. A única coisa que faz é copiar o
+ * nem a conversa em tempo real com o Gabriel. A única coisa que faz é copiar o
  * bloco de PCM e mandar para a thread principal, que monta o WAV.
  *
  * Por que WAV e não webm/opus: o Praat precisa de PCM. Gravando WAV direto no

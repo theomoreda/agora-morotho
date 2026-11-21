@@ -9,7 +9,7 @@
  *      em vez do dinossauro do Chrome ou de uma mensagem em inglês
  *
  * O que ele deliberadamente NÃO faz: fingir funcionar offline. Conversar com
- * a Clara exige rede em tempo real. Um app que abre bonito e depois falha no
+ * o Gabriel exige rede em tempo real. Um app que abre bonito e depois falha no
  * meio é pior, para esta pessoa, do que um que avisa logo que está sem
  * internet. Então o cache guarda a casca, nunca a conversa.
  */

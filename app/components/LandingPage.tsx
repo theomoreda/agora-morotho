@@ -21,7 +21,7 @@ import { TelaUmBotao } from './TelaUmBotao';
  *
  * Sem este valor o Prosa não acompanha nada — e isso é de propósito: a linha
  * de base só existe comparando a MESMA pessoa ao longo dos dias, então criar
- * uma pessoa nova a cada conversa não mediria nada. A conversa com a Clara
+ * uma pessoa nova a cada conversa não mediria nada. A conversa com o Gabriel
  * funciona normalmente mesmo sem acompanhamento.
  *
  * Crie a pessoa com:  python -m scripts.criar_pessoa "Nome" 78
@@ -107,7 +107,7 @@ export default function LandingPage() {
 
       // 1.5 FEITO NO HACKATHON: abre a sessão do Prosa ANTES de convidar o
       //     agente, porque o id dela vai na llm.url (?sid=) do Custom LLM.
-      //     Falha aqui é não-fatal: a pessoa conversa com a Clara de qualquer
+      //     Falha aqui é não-fatal: a pessoa conversa com o Gabriel de qualquer
       //     forma, só não teremos as medidas desta conversa.
       let sessaoId: number | null = null;
       if (PESSOA_ID !== null) {

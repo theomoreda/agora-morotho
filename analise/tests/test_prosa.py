@@ -387,7 +387,7 @@ def test_fluxo_http_completo(cliente):
         "/api/sessoes", json={"pessoa_id": pessoa_id, "canal": "canal-teste"}
     ).json()["sessao_id"]
 
-    for fala in ["oi clara, tudo bem por aqui", "dormi bem, obrigada"]:
+    for fala in ["oi gabriel, tudo bem por aqui", "dormi bem, obrigada"]:
         r = cliente.post(
             f"/api/sessoes/{sessao_id}/falas",
             json={"papel": "pessoa", "texto": fala},

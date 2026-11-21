@@ -16,10 +16,10 @@ import type { MetadataRoute } from 'next';
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Prosa — conversar com a Clara',
+    name: 'Prosa — conversar com o Gabriel',
     short_name: 'Prosa',
     description:
-      'Converse com a Clara todos os dias. Ela faz companhia e acompanha o seu bem-estar.',
+      'Converse com o Gabriel todos os dias. Ele faz companhia e acompanha o seu bem-estar.',
     lang: 'pt-BR',
     dir: 'ltr',
     start_url: '/',

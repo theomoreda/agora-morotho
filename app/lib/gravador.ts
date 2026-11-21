@@ -4,14 +4,14 @@
  * FEITO NO HACKATHON (UNMUTE by Agora, 21-22/11/2026).
  *
  * ── Por que uma segunda captura do microfone ──────────────────────────────
- * A Agora já captura o microfone para a conversa com a Clara, mas aquele
+ * A Agora já captura o microfone para a conversa com o Gabriel, mas aquele
  * caminho passa por cancelamento de eco, supressão de ruído e controle
  * automático de ganho. Essas três coisas mexem exatamente no que queremos
  * medir: supressão de ruído altera jitter e shimmer, e o ganho automático
  * destrói a variação de intensidade que usamos para achar as pausas.
  *
  * Então abrimos uma segunda captura com ANS e AGC DESLIGADOS. O cancelamento
- * de eco fica ligado por padrão, senão a voz da Clara no alto-falante entra
+ * de eco fica ligado por padrão, senão a voz do Gabriel no alto-falante entra
  * na gravação e é medida como se fosse a pessoa. Com fone de ouvido, dá para
  * desligar também (`echoCancellation: false`) e o sinal fica mais puro.
  *

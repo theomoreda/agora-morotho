@@ -6,7 +6,7 @@ import { RegistrarPWA } from '@/components/RegistrarPWA';
 //
 // Três mudanças, todas por acessibilidade:
 //   1. lang 'en' -> 'pt-BR' (leitor de tela precisa saber a língua para
-//      pronunciar certo; em inglês, "Clara" e "conversar" saem errados)
+//      pronunciar certo; em inglês, "Gabriel" e "conversar" saem errados)
 //   2. maximumScale: 1 REMOVIDO — bloquear pinch-zoom viola a WCAG 1.4.4 e
 //      é exatamente o recurso que quem tem presbiopia usa
 //   3. metadata em português, para o nome na tela inicial
@@ -20,9 +20,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Prosa — conversar com a Clara',
+  title: 'Prosa — conversar com o Gabriel',
   description:
-    'Converse com a Clara todos os dias. Ela faz companhia e percebe quando algo mudou.',
+    'Converse com o Gabriel todos os dias. Ele faz companhia e percebe quando algo mudou.',
   applicationName: 'Prosa',
   appleWebApp: {
     capable: true,

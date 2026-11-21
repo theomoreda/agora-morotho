@@ -48,7 +48,7 @@ que mora longe e só descobre que algo mudou quando já é tarde.
 
 ## 2. A solução
 
-**Clara**, uma companhia por voz em português do Brasil. Ela conversa todos os
+**Gabriel**, uma companhia por voz em português do Brasil. Ele conversa todos os
 dias — bate-papo, memórias, família. Dentro da conversa entram três
 **brincadeiras** (nunca chamadas de "teste"):
 
@@ -148,11 +148,11 @@ porque a voz *é* o dado.
 
 | Recurso da Agora | Para quê, no Prosa |
 |---|---|
-| **Conversational AI Engine** (SDK `agora-agents`) | cria e controla a Clara |
+| **Conversational AI Engine** (SDK `agora-agents`) | cria e controla o Gabriel |
 | **ASR Deepgram `nova-3`, `pt-BR`**, modo gerenciado | reconhece a fala sem chave de vendor |
-| **TTS OpenAI**, modo gerenciado | voz da Clara, com `instructions` de tom calmo |
+| **TTS Fish Audio S2.1 Pro** (BYOK; fallback OpenAI `tts-1` gerenciado) | voz do Gabriel em pt-BR |
 | **`turn_detection`** com `silence_duration_ms: 1000` | dá tempo de pensar a quem tem 78 anos (padrão do sample: 480ms) |
-| **Interrupção** (`interrupt_duration_ms: 160`) | a pessoa fala em cima e a Clara para de falar |
+| **Interrupção** (`interrupt_duration_ms: 160`) | a pessoa fala em cima e o Gabriel para de falar |
 | **RTM** (`enable_rtm` + `data_channel: "rtm"`) | transcrição por turno e estado do agente |
 | **Custom LLM** (`llm.url` → nosso `/api/chat/completions`) | executa as brincadeiras via function calling |
 | **Métricas** (`enable_metrics`) | latência por etapa do pipeline, exibida na interface |
@@ -176,7 +176,7 @@ janela de cada brincadeira no momento exato.
 │                      llm.url = .../api/chat/completions?sid=<sessao_id>    │
 │                                                                            │
 │  ConversationComponent                                                     │
-│   ├─ RTC: áudio bidirecional com a Clara                                   │
+│   ├─ RTC: áudio bidirecional com o Gabriel                                   │
 │   ├─ RTM: transcrição por turno + estado do agente                         │
 │   └─ useProsa ──► grava WAV (captura própria, sem ANS/AGC)                 │
 │                                                                            │
@@ -247,9 +247,9 @@ agora quickstart env write .           # escreve .env.local
 npm run dev                            # ou: pnpm dev
 ```
 
-Abra <http://localhost:3000> e toque em **Conversar com a Clara**.
+Abra <http://localhost:3000> e toque em **Conversar com o Gabriel**.
 
-Use **fone de ouvido**: sem ele, a voz da Clara entra na gravação e é medida
+Use **fone de ouvido**: sem ele, a voz do Gabriel entra na gravação e é medida
 como se fosse a pessoa.
 
 ### 3. Brincadeiras (opcional, precisa de túnel)
@@ -264,7 +264,7 @@ cloudflared tunnel --url http://localhost:3000
 #   PROSA_OPENAI_API_KEY=<sua chave OpenAI>
 ```
 
-Sem isso a Clara conversa normalmente, mas as medidas de texto ficam vazias.
+Sem isso o Gabriel conversa normalmente, mas as medidas de texto ficam vazias.
 
 ### Verificação
 
@@ -315,7 +315,7 @@ nada em `app/` ou `analise/` depende dela.
 
 | Arquivo | O que é |
 |---|---|
-| `app/lib/clara.ts` | persona da Clara, prompt pt-BR, regras das brincadeiras |
+| `app/lib/gabriel.ts` | persona do Gabriel, prompt pt-BR, regras das brincadeiras |
 | `app/lib/brincadeiras.ts` | as brincadeiras como tools + caminho rápido sem LLM |
 | `app/lib/prosa-chat-completions.ts` | Custom LLM com function calling e autenticação |
 | `app/lib/gravador.ts` | gravador WAV no navegador, sem ANS/AGC |
@@ -335,7 +335,7 @@ nada em `app/` ou `analise/` depende dela.
 
 | Arquivo | O que mudamos |
 |---|---|
-| `app/api/invite-agent/route.ts` | persona Ada → Clara; ASR `en` → `pt-BR`; TTS MiniMax → OpenAI; `silence_duration_ms` 480 → 1000; caminho de Custom LLM com `?sid=` |
+| `app/api/invite-agent/route.ts` | persona Ada → Gabriel; ASR `en` → `pt-BR`; TTS MiniMax → Fish Audio S2.1 Pro; `silence_duration_ms` 480 → 1000; caminho de Custom LLM com `?sid=` |
 | `app/api/chat/completions/route.ts` | passou a usar o nosso handler com as brincadeiras |
 | `components/LandingPage.tsx` | abre a sessão do Prosa antes do join; usa a tela de um botão |
 | `components/ConversationComponent.tsx` | chama `useProsa`; encerra a sessão antes de desligar |
@@ -397,7 +397,7 @@ Qualquer alerta aqui é falso positivo por definição.
 | 1,25 | 100,0% |
 
 **3. Dias até avisar a família** — a métrica que realmente importa, porque a
-Clara conversa **todos os dias**: deriva real reaparece amanhã.
+Gabriel conversa **todos os dias**: deriva real reaparece amanhã.
 
 | Deriva | Avisou em 21 dias | Mediana 🟡 | Mediana 🔴 |
 |---:|---:|---:|---:|
@@ -473,7 +473,7 @@ Verificado por teste: `test_audio_e_apagado_depois_da_analise`.
   isso o vermelho exige mudança **persistente**, e a mensagem sempre orienta
   procurar um profissional em vez de afirmar algo.
 - **Emergência:** diante de dor no peito, falta de ar, queda, confusão súbita
-  ou fala de autolesão, a Clara orienta ligar para o **SAMU 192** ou chamar um
+  ou fala de autolesão, o Gabriel orienta ligar para o **SAMU 192** ou chamar um
   familiar.
 - **Posicionamento regulatório:** bem-estar e companhia, **não** diagnóstico.
   A RDC nº 657/2022 da Anvisa regula software como dispositivo médico e **não
@@ -529,7 +529,7 @@ o que mataria o modelo B2B com operadoras de saúde.
 
 **O próximo passo de produto é tirar a tela da frente.** Boa parte dos 32
 milhões de idosos não tem smartphone nem paciência para app. O destino é a
-Clara **ligar no telefone da pessoa**:
+Gabriel **ligar no telefone da pessoa**:
 
 ```
 Telefone da pessoa ──PSTN──► CPaaS com número BR
@@ -538,7 +538,7 @@ Telefone da pessoa ──PSTN──► CPaaS com número BR
                             bridge no servidor
                                  │ Agora Server Gateway
                                  ▼
-                          canal RTC ──► Clara (ConvoAI)
+                          canal RTC ──► Gabriel (ConvoAI)
 ```
 
 Hoje a entrega é a tela de um botão. A ligação telefônica é trabalho de
@@ -553,7 +553,7 @@ Outros passos, em ordem de prioridade:
 3. **Ligação agendada**, no horário combinado com a família.
 4. **Notificação ativa** para a família quando o semáforo mudar.
 5. **Lembrete de remédio** dentro da conversa.
-6. **Memória entre sessões**, para a Clara retomar o assunto de ontem.
+6. **Memória entre sessões**, para o Gabriel retomar o assunto de ontem.
 
 ---
 

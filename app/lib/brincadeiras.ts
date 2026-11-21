@@ -6,10 +6,10 @@
  * Por que isto precisa ser ferramenta e não só texto no prompt: a medida exige
  * saber **exatamente quais turnos** pertencem a cada brincadeira. Um prompt
  * pedindo "avise quando começar" é sugestão; uma tool é um evento verificável.
- * A Clara chama a ferramenta, o serviço de análise abre a janela e etiqueta as
+ * O Gabriel chama a ferramenta, o serviço de análise abre a janela e etiqueta as
  * falas que chegam. É isso que transforma conversa em dado.
  *
- * O minuto dos bichos tem um detalhe de latência: enquanto ele roda, a Clara
+ * O minuto dos bichos tem um detalhe de latência: enquanto ele roda, o Gabriel
  * só precisa dizer "Isso!", "Continue...". Mandar isso para o LLM custaria
  * centenas de ms por turno e quebraria o ritmo da brincadeira. Então, com a
  * janela aberta, respondemos de um conjunto fixo, sem chamar o modelo —
@@ -17,7 +17,7 @@
  */
 
 import { jsonSchema, tool } from 'ai';
-import { PALAVRAS_MEMORIA, SEGUNDOS_FLUENCIA } from '@/lib/clara';
+import { PALAVRAS_MEMORIA, SEGUNDOS_FLUENCIA } from '@/lib/gabriel';
 import { urlAnalise, type Brincadeira } from '@/lib/prosa-api';
 
 /** Incentivos curtos ditos durante o minuto dos bichos. */
@@ -95,13 +95,13 @@ export async function respostaRapidaFluencia(
 }
 
 /**
- * Ferramentas expostas à Clara.
+ * Ferramentas expostas ao Gabriel.
  *
  * `sessaoId` vem do `?sid=` da llm.url, montada no join (invite-agent). A
  * requisição do Custom LLM não traz o canal, então o id da sessão na URL é
  * como amarramos a chamada do LLM à conversa certa.
  */
-export function ferramentasDaClara(sessaoId: number | null) {
+export function ferramentasDoGabriel(sessaoId: number | null) {
   const semSessao =
     'Anotado. (Esta conversa não está sendo acompanhada, então não há o que registrar.)';
 

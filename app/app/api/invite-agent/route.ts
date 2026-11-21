@@ -5,26 +5,26 @@ import {
   Area,
   DeepgramSTT,
   ExpiresIn,
+  FishAudioTTS,
   OpenAI,
   OpenAITTS,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
 import {
-  CLARA_FAILURE_MESSAGE,
-  CLARA_GREETING,
-  CLARA_PROMPT,
-  CLARA_VOICE_INSTRUCTIONS,
-} from '@/lib/clara';
+  GABRIEL_FAILURE_MESSAGE,
+  GABRIEL_GREETING,
+  GABRIEL_PROMPT,
+} from '@/lib/gabriel';
 
 // ADAPTADO NO HACKATHON — baseado em app/api/invite-agent/route.ts do
 // quickstart oficial agent-quickstart-nextjs (cópia intacta do original em
 // route.ts.orig-quickstart, para auditoria de "preexistente x feito aqui").
 //
 // Mudanças, todas em campos documentados de persona/join:
-//   persona Ada -> Clara (lib/clara.ts), em pt-BR
+//   persona Ada -> Gabriel (lib/gabriel.ts), em pt-BR
 //   ASR language 'en' -> 'pt-BR' (Deepgram nova-3 suporta pt-BR)
-//   TTS MiniMax (voz inglesa) -> OpenAI TTS (multilíngue, voz feminina calorosa)
+//   TTS MiniMax (voz inglesa) -> Fish Audio S2.1 Pro (BYOK), fallback OpenAI tts-1
 //   silence_duration_ms 480 -> 1000, para dar tempo de pensar à pessoa idosa
 //   LLM gerenciado, com caminho opcional de Custom LLM (brincadeiras do Prosa)
 //
@@ -40,38 +40,35 @@ function requireEnv(name: string): string {
 }
 
 /**
- * Voz da Clara.
+ * Voz do Gabriel.
  *
- * Padrão: preset gerenciado da Agora (`tts-1`) — não precisa de chave de vendor.
- * A voz `nova` é feminina e calorosa, e o modelo é multilíngue, então fala pt-BR.
+ * Principal: Fish Audio S2.1 Pro (BYOK). Precisa de PROSA_FISH_API_KEY e do id
+ * de uma voz pt-BR do Fish (PROSA_FISH_VOICE_ID, o `reference_id` da voz em
+ * fish.audio). O Agora repassa `backend` direto ao Fish, como header `model`.
  *
- * Upgrade (BYOK): com PROSA_TTS_API_KEY definida, usa `gpt-4o-mini-tts`, que
- * aceita o campo `instructions` — é ele que deixa a voz pausada e acolhedora,
- * com sotaque brasileiro. Vale a troca: experiência de voz é 25% da nota.
+ * Sem a chave, cai no preset gerenciado da Agora (`tts-1`, voz `nova`) — assim
+ * a demo continua subindo sem nenhuma chave de vendor.
  */
-function buildClaraVoice() {
-  const ttsApiKey = process.env.PROSA_TTS_API_KEY;
+function buildGabrielVoice() {
+  const fishApiKey = process.env.PROSA_FISH_API_KEY;
 
-  if (ttsApiKey) {
-    return new OpenAITTS({
-      apiKey: ttsApiKey,
-      baseUrl: process.env.PROSA_TTS_BASE_URL ?? 'https://api.openai.com/v1',
-      model: process.env.PROSA_TTS_MODEL ?? 'gpt-4o-mini-tts',
-      voice: process.env.PROSA_TTS_VOICE ?? 'coral',
-      instructions: CLARA_VOICE_INSTRUCTIONS,
-      speed: 0.95,
+  if (fishApiKey) {
+    return new FishAudioTTS({
+      key: fishApiKey,
+      referenceId: requireEnv('PROSA_FISH_VOICE_ID'),
+      backend: process.env.PROSA_FISH_MODEL ?? 's2.1-pro',
     });
   }
 
   return new OpenAITTS({
     model: 'tts-1',
-    voice: process.env.PROSA_TTS_VOICE ?? 'nova',
+    voice: 'nova',
     speed: 0.95,
   });
 }
 
 /**
- * Cérebro da Clara.
+ * Cérebro do Gabriel.
  *
  * Padrão: LLM gerenciado da Agora (gpt-4o-mini) — sem chave, já conversa.
  *
@@ -79,7 +76,7 @@ function buildClaraVoice() {
  * exposto por um túnel HTTPS público), a Agora chama o nosso Custom LLM. É ele
  * que executa as brincadeiras e registra as falas para as medidas de texto.
  */
-function buildClaraBrain(prosaSessaoId?: number | null) {
+function buildGabrielBrain(prosaSessaoId?: number | null) {
   const customLlmUrl = process.env.PROSA_LLM_URL;
 
   if (customLlmUrl) {
@@ -93,8 +90,8 @@ function buildClaraBrain(prosaSessaoId?: number | null) {
       apiKey: requireEnv('PROSA_LLM_API_KEY'),
       url: url.toString(),
       model: process.env.PROSA_LLM_MODEL ?? 'gpt-4o-mini',
-      greetingMessage: CLARA_GREETING,
-      failureMessage: CLARA_FAILURE_MESSAGE,
+      greetingMessage: GABRIEL_GREETING,
+      failureMessage: GABRIEL_FAILURE_MESSAGE,
       maxHistory: 15,
       params: {
         max_tokens: 1024,
@@ -106,8 +103,8 @@ function buildClaraBrain(prosaSessaoId?: number | null) {
 
   return new OpenAI({
     model: 'gpt-4o-mini',
-    greetingMessage: CLARA_GREETING,
-    failureMessage: CLARA_FAILURE_MESSAGE,
+    greetingMessage: GABRIEL_GREETING,
+    failureMessage: GABRIEL_FAILURE_MESSAGE,
     maxHistory: 15,
     params: {
       max_tokens: 1024,
@@ -146,13 +143,13 @@ export async function POST(request: NextRequest) {
       appCertificate,
     });
 
-    // Pipeline: Deepgram pt-BR (reseller) STT → OpenAI LLM → OpenAI TTS.
+    // Pipeline: Deepgram pt-BR (reseller) STT → OpenAI LLM → Fish Audio S2.1 Pro TTS.
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start.
     const agent = new Agent({
       client,
-      instructions: CLARA_PROMPT,
-      greeting: CLARA_GREETING,
-      failureMessage: CLARA_FAILURE_MESSAGE,
+      instructions: GABRIEL_PROMPT,
+      greeting: GABRIEL_GREETING,
+      failureMessage: GABRIEL_FAILURE_MESSAGE,
       maxHistory: 50,
       // VAD controls how the agent detects the start and end of a user's turn.
       turnDetection: {
@@ -161,8 +158,8 @@ export async function POST(request: NextRequest) {
           start_of_speech: {
             mode: 'vad',
             vad_config: {
-              // Mantido curto de propósito: interromper a Clara é um requisito
-              // de produto (a pessoa idosa fala em cima e ela para de falar).
+              // Mantido curto de propósito: interromper o Gabriel é um requisito
+              // de produto (a pessoa idosa fala em cima e ele para de falar).
               interrupt_duration_ms: 160,
               prefix_padding_ms: 300,
             },
@@ -170,7 +167,7 @@ export async function POST(request: NextRequest) {
           end_of_speech: {
             mode: 'vad',
             // 1000ms (padrão do sample: 480). Pessoa idosa faz pausa longa
-            // para pensar; com 480ms a Clara atropelava a fala.
+            // para pensar; com 480ms o Gabriel atropelava a fala.
             vad_config: {
               silence_duration_ms: Number(
                 process.env.PROSA_SILENCE_MS ?? 1000,
@@ -203,8 +200,8 @@ export async function POST(request: NextRequest) {
           punctuation: true,
         }),
       )
-      .withLlm(buildClaraBrain(prosa_sessao_id))
-      .withTts(buildClaraVoice());
+      .withLlm(buildGabrielBrain(prosa_sessao_id))
+      .withTts(buildGabrielVoice());
 
     // remoteUids restricts the agent to only process audio from this user
     const session = agent.createSession({

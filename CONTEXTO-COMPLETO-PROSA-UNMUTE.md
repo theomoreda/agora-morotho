@@ -168,11 +168,11 @@ A pesquisa mostrou que a voz serve para **triagem e monitoramento de mudanças**
 > *"Não diagnostica. Escuta todo dia e avisa a família quando algo mudou."*
 
 - **Produto:** Prosa
-- **Agente:** Clara, voz calorosa em português do Brasil
+- **Agente:** Gabriel, voz calorosa em português do Brasil
 - **Persona de demo:** "Dona Cida, 78 anos", com **dados simulados e identificados**
 
 ### Como funciona
-1. A pessoa idosa conversa com a Clara todos os dias (bate-papo, memórias, família).
+1. A pessoa idosa conversa com o Gabriel todos os dias (bate-papo, memórias, família).
 2. Dentro da conversa entram **brincadeiras** (nunca chamadas de "teste"):
    - **Memória:** guardar 3 palavras no começo e lembrar no fim
    - **Fluência verbal:** falar o máximo de bichos em 1 minuto
@@ -181,7 +181,7 @@ A pesquisa mostrou que a voz serve para **triagem e monitoramento de mudanças**
 4. Cada medida é comparada com a **linha de base da própria pessoa** (as primeiras conversas).
 5. Semáforo: 🟢 normal · 🟡 mudança percebida · 🔴 mudança persistente (recomenda procurar um profissional).
 6. O **painel da família** mostra tendências e alertas, nunca gravações.
-7. A Clara adapta a conversa ao contexto. Exemplo: se a última conversa foi amarela, pergunta com carinho como a pessoa dormiu.
+7. O Gabriel adapta a conversa ao contexto. Exemplo: se a última conversa foi amarela, pergunta com carinho como a pessoa dormiu.
 
 ### Por que comparar a pessoa com ela mesma
 - Não existe modelo de voz validado para idosos brasileiros.
@@ -299,7 +299,7 @@ A pesquisa mostrou que a voz serve para **triagem e monitoramento de mudanças**
 ### Ética
 - O idoso **sabe** que a conversa ajuda a acompanhar o bem-estar dele. Nada de vigilância escondida.
 - Falso positivo gera ansiedade e falso negativo gera falsa segurança. Por isso o alerta exige mudança **persistente** e a mensagem sempre orienta procurar um profissional.
-- Em sinais de emergência (dor no peito, falta de ar, queda, confusão súbita, fala de se machucar), a Clara orienta ligar para o **SAMU 192** ou para um familiar.
+- Em sinais de emergência (dor no peito, falta de ar, queda, confusão súbita, fala de se machucar), o Gabriel orienta ligar para o **SAMU 192** ou para um familiar.
 - **Whisper:** o próprio model card desaconselha usá-lo para classificar atributos humanos ou em decisões de alto risco. No Prosa, ele só entraria em transcrição com marcação de tempo por palavra.
 
 ---
@@ -355,15 +355,15 @@ A Agora (agora.io) é uma plataforma de comunicação em tempo real (voz e víde
 ### Recursos usados no Prosa
 | Recurso | Para quê |
 |---|---|
-| **Conversational AI Engine** (REST `join` / `update` / `leave`) | Criar e controlar a Clara |
+| **Conversational AI Engine** (REST `join` / `update` / `leave`) | Criar e controlar o Gabriel |
 | **ASR Deepgram `nova-3`, `pt-BR`, `credential_mode: managed`** | Reconhecer a fala sem chave própria. O ARES lista pt-PT, não pt-BR |
 | **Custom LLM** (`llm.url` apontando para o nosso servidor) | Persona, brincadeiras e registro das falas |
 | **Function calling** | Executar as brincadeiras no nosso servidor |
 | **turn_detection** (`silence_duration_ms` = 1000; o exemplo da doc usa 640) | Dar tempo ao idoso de pensar |
-| **Interrupção** | Idoso interrompe e a Clara para |
+| **Interrupção** | Idoso interrompe e o Gabriel para |
 | **RTM** (`enable_rtm: true`, `data_channel: "rtm"`) | Eventos `state.listening`, `state.thinking` e `state.speaking` com timestamp, mais legendas |
 | **Update API** (`llm.system_messages`) | Injetar contexto no meio da conversa |
-| **TTS OpenAI** (`gpt-4o-mini-tts`, voz `coral`, com `instructions` de tom calmo em pt-BR) | Voz da Clara (BYOK) |
+| **TTS OpenAI** (`gpt-4o-mini-tts`, voz `coral`, com `instructions` de tom calmo em pt-BR) | Voz do Gabriel (BYOK) |
 | Cloud Recording (opcional) | Gravar a conversa. Se usar, configurar `audio_scenario: "chorus"` |
 
 ### Detalhes da API
@@ -404,7 +404,7 @@ agora project doctor                         # diagnóstico de credenciais e red
         │  RTM: estado do agente / legendas                    │ POST /chat/completions?sid=…  (SSE)
         │                                                      ▼
         │                                         [Prosa — FastAPI, 1 processo]
-        │                                          ├─ persona Clara + brincadeiras (function calling)
+        │                                          ├─ persona Gabriel + brincadeiras (function calling)
         │                                          ├─ minuto dos bichos sem LLM (latência ~0)
         │                                          ├─ registro das falas → medidas de texto
         └─ gravador.js ── áudio da sessão ───────► ├─ medidas acústicas (Praat / parselmouth)
@@ -453,7 +453,7 @@ prosa/
 ├─ prosa/
 │  ├─ app.py              # FastAPI: /chat/completions, /api/pessoas, /api/sessoes, /audio, /finalizar, /painel
 │  ├─ custom_llm.py       # SSE, ferramentas, minuto dos bichos sem LLM, registro das falas
-│  ├─ persona.py          # prompt da Clara, palavras de memória, definição das tools
+│  ├─ persona.py          # prompt do Gabriel, palavras de memória, definição das tools
 │  ├─ agora.py            # propriedades do join (pt-BR, Custom LLM, TTS, turnos), join/update/leave
 │  ├─ db.py               # SQLite: pessoas, sessões, falas
 │  ├─ config.py
@@ -575,12 +575,12 @@ python -m pytest -q
 - 2:15–3:00: validação, limitações e visão
 
 ### Roteiro da demo e do vídeo (2 min)
-1. A Clara cumprimenta pelo nome. A conversa flui.
-2. O idoso **interrompe** e a Clara para e escuta. Isso mostra o critério de voz.
+1. O Gabriel cumprimenta pelo nome. A conversa flui.
+2. O idoso **interrompe** e o Gabriel para e escuta. Isso mostra o critério de voz.
 3. Brincadeira das 3 palavras.
-4. Minuto dos bichos, com a Clara respondendo "Isso! Continue…".
+4. Minuto dos bichos, com o Gabriel respondendo "Isso! Continue…".
 5. Painel verde com a linha de base.
-6. Sessão "alterada" (fala lenta, mais pausas): o semáforo fica 🟡, e na próxima conversa a Clara pergunta com carinho como a pessoa dormiu.
+6. Sessão "alterada" (fala lenta, mais pausas): o semáforo fica 🟡, e na próxima conversa o Gabriel pergunta com carinho como a pessoa dormiu.
 7. Fechar com "não diagnostica, percebe mudanças".
 
 ### Palavras proibidas

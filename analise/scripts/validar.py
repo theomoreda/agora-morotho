@@ -328,7 +328,7 @@ def main() -> None:
         )
     print()
     print("  É esta a métrica que a família sente, e não a")
-    print("  sensibilidade por conversa: a Clara fala todo dia, então")
+    print("  sensibilidade por conversa: o Gabriel fala todo dia, então")
     print("  deriva real volta amanhã. Sensibilidade de 37% por conversa")
     print("  NÃO quer dizer que 63% das derivas passam batido — quer")
     print("  dizer que levam alguns dias.")

@@ -9,7 +9,7 @@
  *      o app Next.js não é um trabalho derivado dele.
  */
 
-export type PapelFala = 'pessoa' | 'clara';
+export type PapelFala = 'pessoa' | 'gabriel';
 export type Brincadeira = 'fluencia' | 'memoria' | 'orientacao';
 
 export type Semaforo = 'calibrando' | 'verde' | 'amarelo' | 'vermelho';

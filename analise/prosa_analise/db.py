@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS sessoes (
 CREATE TABLE IF NOT EXISTS falas (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     sessao_id   INTEGER NOT NULL REFERENCES sessoes(id),
-    -- 'pessoa' ou 'clara'
+    -- 'pessoa' ou 'gabriel'
     papel       TEXT    NOT NULL,
     texto       TEXT    NOT NULL,
     -- 'fluencia' | 'memoria' | 'orientacao' | NULL (conversa normal)

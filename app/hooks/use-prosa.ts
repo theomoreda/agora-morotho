@@ -43,7 +43,7 @@ export type OpcoesProsa = {
    * "esta conversa não está sendo acompanhada", e tudo aqui vira no-op.
    */
   sessaoId: number | null;
-  /** UID local, para separar a fala da pessoa da fala da Clara. */
+  /** UID local, para separar a fala da pessoa da fala do Gabriel. */
   uidLocal: string;
   /** Só começa quando a conversa está de fato no ar. */
   ativo: boolean;
@@ -99,7 +99,7 @@ export function useProsa(opcoes: OpcoesProsa): EstadoProsa {
       } catch (e) {
         if (!cancelado) {
           // Falha aqui não derruba a conversa: a pessoa continua falando com a
-          // Clara, só não teremos as medidas desta sessão. É o comportamento
+          // Gabriel, só não teremos as medidas desta sessão. É o comportamento
           // certo — companhia é o valor principal, a medida é o secundário.
           setErro(e instanceof Error ? e.message : String(e));
         }
@@ -135,7 +135,7 @@ export function useProsa(opcoes: OpcoesProsa): EstadoProsa {
 
       enviadosRef.current.add(chave);
 
-      const papel = String(turno.uid) === String(uidLocal) ? 'pessoa' : 'clara';
+      const papel = String(turno.uid) === String(uidLocal) ? 'pessoa' : 'gabriel';
 
       // A etiqueta de brincadeira NÃO vem daqui. Quem sabe se o minuto dos
       // bichos está rolando é o Custom LLM, que abre e fecha a janela no
