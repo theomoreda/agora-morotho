@@ -1,0 +1,54 @@
+# ── Credenciais — NUNCA commitar (regra 5.5 do regulamento) ──────────────
+.env
+.env.*
+!.env.example
+!env.local.example
+*.key
+*.pem
+
+# ── Dados pessoais e áudio ───────────────────────────────────────────────
+# O banco guarda medidas de pessoas reais. Não vai para repositório público.
+*.db
+*.sqlite
+*.sqlite3
+*.wav
+*.webm
+*.mp3
+*.m4a
+
+# ── Dependências e build ─────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+dist/
+build/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# ── Ferramentas instaladas dentro do projeto ─────────────────────────────
+.tools/
+
+# ── Vinculação local do projeto Agora (contém ids do projeto) ────────────
+.agora/
+
+# ── Sistema operacional e editor ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# ── Temporários ──────────────────────────────────────────────────────────
+*.log
+.cache/
+
+# ── Config local de agente ───────────────────────────────────────────────
+# .claude/skills/agora é um SYMLINK para .agents/skills/agora. O git
+# dereferencia e commitaria 59 arquivos duplicados. A skill já vai uma vez,
+# em .agents/, e o skills-lock.json registra a versão instalada.
+.claude/
