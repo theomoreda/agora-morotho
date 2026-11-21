@@ -34,8 +34,7 @@ SESSOES_LINHA_BASE = 5
 MINIMO_PARA_AVALIAR = 5
 
 # Quantos desvios-padrão contam como piora relevante numa medida.
-# 2,5 e não 2,0: com 10 medidas testadas por conversa, 2,0 produz falso
-# positivo por acaso em cerca de 2% das sessões estáveis.
+# Escolhido por varredura empírica — ver scripts/calibrar.py.
 LIMIAR_Z = 2.5
 
 # Guarda contra falso alarme: além dos 2 desvios, a mudança tem que ser de pelo
@@ -44,29 +43,70 @@ LIMIAR_Z = 2.5
 LIMIAR_RELATIVO = 0.10
 
 # Quantas medidas precisam piorar junto para acender o amarelo.
-# 3 e não 2, pelo mesmo problema de comparações múltiplas. Uma deriva real
-# move várias medidas ao mesmo tempo; o acaso raramente move três.
 #
-# Ressalva honesta: estas 10 medidas NÃO são independentes entre si
-# ("tempo em pausas" e "duração das pausas" andam juntas), então exigir três
-# protege menos do que a conta de probabilidade sugere.
-MEDIDAS_PARA_AMARELO = 3
+# 4, e isto NÃO foi chutado. Ao passar de 10 para 19 medidas, o falso alarme
+# saltou de 0,30% para 1,37% por conversa (comparações múltiplas). A varredura
+# em scripts/calibrar.py testou 18 combinações e esta foi a mais sensível
+# entre as que mantêm o falso alarme <= 0,30%:
+#
+#   z=2.5 · 3 medidas · 2 domínios -> falso alarme 1,20%  sensibilidade 60,9%
+#   z=2.5 · 4 medidas · 2 domínios -> falso alarme 0,17%  sensibilidade 37,4%  <-- escolhida
+#   z=3.0 · 3 medidas · 2 domínios -> falso alarme 0,20%  sensibilidade 31,7%
+#
+# Trocar sensibilidade por especificidade é a decisão certa AQUI porque a
+# conversa é diária: deriva real reaparece amanhã e depois de amanhã, e o
+# vermelho já exige persistência. Alarme falso, não — ele só queima a
+# confiança da família, que é o que faz o produto funcionar.
+MEDIDAS_PARA_AMARELO = 4
+
+# ...e precisam vir de pelo menos 2 DOMÍNIOS diferentes.
+#
+# Esta regra resolve o problema que a contagem simples de medidas tem: as
+# medidas não são independentes entre si. "tempo em pausas", "duração das
+# pausas" e "pausas longas" medem quase a mesma coisa e andam juntas — então
+# três delas piorando é UM sinal, não três. Exigindo domínios distintos, o
+# alerta só acende quando a mudança aparece em aspectos diferentes da fala.
+DOMINIOS_PARA_AMARELO = 2
 
 Status = Literal["calibrando", "verde", "amarelo", "vermelho"]
 
-# Para cada medida: (rótulo em português, direção que significa piora).
+# Domínios. Medidas do mesmo domínio são correlacionadas entre si, então
+# contam como um único sinal para a regra de domínios.
+DOMINIO_RITMO = "ritmo"
+DOMINIO_TOM = "tom"
+DOMINIO_INTENSIDADE = "intensidade"
+DOMINIO_VOZ = "qualidade vocal"
+DOMINIO_TEXTO = "texto"
+DOMINIO_TAREFA = "brincadeira"
+
+# Para cada medida: (rótulo em português, direção que significa piora, domínio).
 # direcao = -1 -> cair é piora;  +1 -> subir é piora.
-MEDIDAS: dict[str, tuple[str, int]] = {
-    "taxa_articulacao_sil_s": ("velocidade da fala", -1),
-    "proporcao_pausas": ("tempo em pausas", +1),
-    "duracao_media_pausa_s": ("duração das pausas", +1),
-    "variacao_tom_st": ("variação do tom de voz", -1),
-    "palavras_por_turno": ("tamanho das respostas", -1),
-    "mattr": ("variedade de palavras", -1),
-    "bichos_diferentes": ("bichos lembrados no minuto", -1),
-    "jitter_local": ("irregularidade da voz", +1),
-    "shimmer_local": ("irregularidade do volume", +1),
-    "hnr_db": ("clareza da voz", -1),
+MEDIDAS: dict[str, tuple[str, int, str]] = {
+    # ── ritmo ──
+    "taxa_articulacao_sil_s": ("velocidade da fala", -1, DOMINIO_RITMO),
+    "taxa_fala_sil_s": ("ritmo geral da conversa", -1, DOMINIO_RITMO),
+    "razao_fala_articulacao": ("fluidez (fala vs. pausa)", -1, DOMINIO_RITMO),
+    "proporcao_pausas": ("tempo em pausas", +1, DOMINIO_RITMO),
+    "duracao_media_pausa_s": ("duração das pausas", +1, DOMINIO_RITMO),
+    "pausas_longas_por_min": ("pausas longas por minuto", +1, DOMINIO_RITMO),
+    # ── tom ──
+    "variacao_tom_st": ("variação do tom de voz", -1, DOMINIO_TOM),
+    "amplitude_tom_st": ("alcance do tom de voz", -1, DOMINIO_TOM),
+    # ── intensidade ──
+    "variacao_intensidade_db": ("variação do volume", -1, DOMINIO_INTENSIDADE),
+    # ── qualidade vocal ──
+    "jitter_local": ("irregularidade da voz", +1, DOMINIO_VOZ),
+    "shimmer_local": ("irregularidade do volume", +1, DOMINIO_VOZ),
+    "hnr_db": ("clareza da voz", -1, DOMINIO_VOZ),
+    "fracao_vozeada": ("firmeza da voz", -1, DOMINIO_VOZ),
+    # ── texto ──
+    "palavras_por_turno": ("tamanho das respostas", -1, DOMINIO_TEXTO),
+    "mattr": ("variedade de palavras", -1, DOMINIO_TEXTO),
+    "hesitacoes_por_100": ("hesitações na fala", +1, DOMINIO_TEXTO),
+    "repeticao_imediata_por_100": ("repetição de palavras", +1, DOMINIO_TEXTO),
+    "proporcao_conteudo": ("densidade do que é dito", -1, DOMINIO_TEXTO),
+    # ── brincadeiras ──
+    "bichos_diferentes": ("bichos lembrados no minuto", -1, DOMINIO_TAREFA),
 }
 
 
@@ -76,6 +116,7 @@ class MudancaMedida:
 
     chave: str
     rotulo: str
+    dominio: str
     valor_atual: float
     media_base: float
     z: float
@@ -175,7 +216,7 @@ def avaliar(
 
     mudancas: list[MudancaMedida] = []
 
-    for chave, (rotulo, direcao) in MEDIDAS.items():
+    for chave, (rotulo, direcao, dominio) in MEDIDAS.items():
         if chave not in linha_base:
             continue
         atual = medidas_atuais.get(chave)
@@ -203,6 +244,7 @@ def avaliar(
                 MudancaMedida(
                     chave=chave,
                     rotulo=rotulo,
+                    dominio=dominio,
                     valor_atual=atual,
                     media_base=media,
                     z=z,
@@ -212,7 +254,12 @@ def avaliar(
 
     mudancas.sort(key=lambda m: m.z, reverse=True)
 
-    if len(mudancas) < MEDIDAS_PARA_AMARELO:
+    dominios_afetados = {m.dominio for m in mudancas}
+
+    if (
+        len(mudancas) < MEDIDAS_PARA_AMARELO
+        or len(dominios_afetados) < DOMINIOS_PARA_AMARELO
+    ):
         return Avaliacao(
             status="verde",
             n_sessoes_base=n_sessoes_base,

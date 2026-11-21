@@ -127,6 +127,73 @@ def sensibilidade(
     return saida
 
 
+def dias_ate_avisar(
+    intensidade: float,
+    n_simulacoes: int,
+    rng: np.random.Generator,
+    max_dias: int = 21,
+) -> dict:
+    """
+    Em quantos DIAS a família é avisada, se a deriva começou e não parou?
+
+    Esta é a métrica que importa de verdade, e não a sensibilidade por
+    conversa. O Prosa fala com a pessoa todos os dias: uma deriva real
+    reaparece amanhã. Sensibilidade de 37% por conversa não significa que 63%
+    das derivas passam — significa que, em média, levam alguns dias.
+
+    Simula a linha de base, depois dias consecutivos com deriva, e registra
+    em que dia saiu o primeiro amarelo e o primeiro vermelho (que exige
+    persistência: amarelo repetido na conversa seguinte).
+    """
+    dias_amarelo: list[int] = []
+    dias_vermelho: list[int] = []
+    nunca = 0
+
+    for _ in range(n_simulacoes):
+        historico = [_sortear_sessao(rng) for _ in range(SESSOES_LINHA_BASE)]
+        linha_base = calcular_linha_base(historico)
+
+        anterior_alterada = False
+        primeiro_amarelo = None
+        primeiro_vermelho = None
+
+        for dia in range(1, max_dias + 1):
+            atual = _sortear_sessao(rng, intensidade_deriva=intensidade)
+            r = avaliar(
+                atual,
+                linha_base,
+                sessao_anterior_alterada=anterior_alterada,
+                n_sessoes_base=SESSOES_LINHA_BASE,
+            )
+
+            if r.status in ("amarelo", "vermelho") and primeiro_amarelo is None:
+                primeiro_amarelo = dia
+            if r.status == "vermelho" and primeiro_vermelho is None:
+                primeiro_vermelho = dia
+                break
+
+            anterior_alterada = r.status in ("amarelo", "vermelho")
+
+        if primeiro_amarelo is None:
+            nunca += 1
+        else:
+            dias_amarelo.append(primeiro_amarelo)
+        if primeiro_vermelho is not None:
+            dias_vermelho.append(primeiro_vermelho)
+
+    return {
+        "intensidade": intensidade,
+        "avisou_em_ate_21_dias": 1 - (nunca / n_simulacoes),
+        "mediana_dias_amarelo": (
+            statistics.median(dias_amarelo) if dias_amarelo else None
+        ),
+        "mediana_dias_vermelho": (
+            statistics.median(dias_vermelho) if dias_vermelho else None
+        ),
+        "fracao_chegou_vermelho": len(dias_vermelho) / n_simulacoes,
+    }
+
+
 def icc_um(grupos: list[list[float]]) -> float | None:
     """
     ICC(1), modelo de efeitos aleatórios de uma via.
@@ -244,7 +311,32 @@ def main() -> None:
         )
 
     print("\n" + "-" * 74)
-    print("3. TESTE-RETESTE — ICC(1) sobre gravações reais")
+    print("3. DIAS ATÉ AVISAR A FAMÍLIA (deriva que começou e não parou)")
+    print("-" * 74)
+    print(
+        f"  {'deriva':>8} {'avisou em 21d':>14} {'mediana amarelo':>17} "
+        f"{'mediana vermelho':>18}"
+    )
+    for intensidade in (0.5, 0.75, 1.0):
+        d = dias_ate_avisar(intensidade, max(400, args.simulacoes // 8), rng)
+        am = d["mediana_dias_amarelo"]
+        ve = d["mediana_dias_vermelho"]
+        print(
+            f"  {intensidade:>8.2f} {d['avisou_em_ate_21_dias']:>13.1%} "
+            f"{(f'{am:.0f} dias' if am else '-'):>17} "
+            f"{(f'{ve:.0f} dias' if ve else '-'):>18}"
+        )
+    print()
+    print("  É esta a métrica que a família sente, e não a")
+    print("  sensibilidade por conversa: a Clara fala todo dia, então")
+    print("  deriva real volta amanhã. Sensibilidade de 37% por conversa")
+    print("  NÃO quer dizer que 63% das derivas passam batido — quer")
+    print("  dizer que levam alguns dias.")
+
+    print()
+    print("-" * 74)
+
+    print("4. TESTE-RETESTE — ICC(1) sobre gravações reais")
     print("-" * 74)
     tr = teste_reteste()
     print(f"  pessoas reais no banco    {tr['pessoas_reais']}")

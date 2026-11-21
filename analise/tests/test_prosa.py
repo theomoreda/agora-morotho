@@ -33,7 +33,9 @@ from prosa_analise.linha_base import avaliar, calcular_linha_base
 # apoio
 # --------------------------------------------------------------------------
 
-TAXA = 16000
+# 48 kHz por padrão: é o que o gravador do navegador pede, e é o que o
+# portão de qualidade exige para liberar jitter, shimmer e HNR.
+TAXA = 48000
 
 
 def _fala_sintetica(
@@ -44,6 +46,7 @@ def _fala_sintetica(
     pausa_s: float = 0.35,
     variacao_tom: float = 1.0,
     semente: int = 7,
+    taxa: int = TAXA,
 ) -> Path:
     """
     Gera um WAV parecido com fala: sílabas vozeadas separadas por pausas.
@@ -57,14 +60,13 @@ def _fala_sintetica(
     for i in range(n_silabas):
         freq = f0 * (1 + variacao_tom * rng.standard_normal() * 0.06)
         dur = 0.18
-        t = np.linspace(0, dur, int(TAXA * dur), endpoint=False)
-        fase = np.cumsum(2 * np.pi * freq / TAXA) * np.ones_like(t)
-        fase = np.cumsum(np.full(t.size, 2 * np.pi * freq / TAXA))
+        n = int(taxa * dur)
+        fase = np.cumsum(np.full(n, 2 * np.pi * freq / taxa))
         onda = sum((1.0 / (k + 1)) * np.sin((k + 1) * fase) for k in range(6))
-        partes.append(onda * np.hanning(t.size))
-        partes.append(np.zeros(int(TAXA * 0.04)))
+        partes.append(onda * np.hanning(n))
+        partes.append(np.zeros(int(taxa * 0.04)))
         if (i + 1) % 5 == 0:
-            partes.append(np.zeros(int(TAXA * pausa_s)))
+            partes.append(np.zeros(int(taxa * pausa_s)))
 
     sinal = np.concatenate(partes)
     sinal = sinal / np.max(np.abs(sinal)) * 0.8
@@ -72,7 +74,7 @@ def _fala_sintetica(
     with wave.open(str(caminho), "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
-        w.setframerate(TAXA)
+        w.setframerate(taxa)
         w.writeframes((sinal * 32767).astype("<i2").tobytes())
 
     return caminho
@@ -161,6 +163,49 @@ def test_acustica_audio_curto_nao_inventa_medida(tmp_path):
     m = acustica.medir(str(caminho))
     assert m.taxa_articulacao_sil_s is None
     assert m.f0_media_hz is None
+
+
+def test_portao_suprime_qualidade_vocal_em_taxa_baixa(tmp_path):
+    """
+    Em 16 kHz (e pior ainda em 8 kHz, banda de telefonia), jitter, shimmer e
+    HNR não são confiáveis. O sistema tem que SUPRIMIR, não reportar número
+    ruim — medida errada acende alerta falso para a família.
+    """
+    caminho = _fala_sintetica(tmp_path / "estreita.wav", taxa=16000)
+    m = acustica.medir(str(caminho))
+
+    assert m.jitter_local is None
+    assert m.shimmer_local is None
+    assert m.hnr_db is None
+    # Mas o que NÃO depende de taxa alta continua medido.
+    assert m.taxa_articulacao_sil_s is not None
+    assert m.proporcao_pausas is not None
+    assert any("16000" in a for a in m.avisos)
+
+
+def test_portao_descarta_audio_saturado(tmp_path):
+    """Microfone saturando infla o shimmer. Descartamos a sessão inteira."""
+    caminho = _fala_sintetica(tmp_path / "saturado.wav")
+    m = acustica.medir(
+        str(caminho),
+        {"taxaAmostragem": 48000, "fracaoSaturada": 0.08, "nivelMedioDbfs": -12.0},
+    )
+
+    assert m.confiavel is False
+    assert m.taxa_articulacao_sil_s is None
+    assert any("saturando" in a for a in m.avisos)
+
+
+def test_portao_descarta_sinal_fraco(tmp_path):
+    """Microfone longe ou mudo: a detecção de pausas viraria lixo."""
+    caminho = _fala_sintetica(tmp_path / "fraco.wav")
+    m = acustica.medir(
+        str(caminho),
+        {"taxaAmostragem": 48000, "fracaoSaturada": 0.0, "nivelMedioDbfs": -72.0},
+    )
+
+    assert m.confiavel is False
+    assert any("baixo" in a for a in m.avisos)
 
 
 # --------------------------------------------------------------------------
@@ -269,6 +314,38 @@ def test_semaforo_acende_amarelo_com_deriva():
     # A mensagem descreve a mudança em linguagem comum, sem nome de doença.
     for proibida in ("Alzheimer", "demência", "diagnóst", "doença"):
         assert proibida.lower() not in r.mensagem.lower()
+
+
+def test_amarelo_exige_dominios_diferentes():
+    """
+    Três medidas do MESMO domínio piorando é UM sinal, não três: "tempo em
+    pausas", "duração das pausas" e "pausas longas" medem quase a mesma coisa.
+    O semáforo só acende quando a mudança aparece em aspectos diferentes.
+    """
+    rng = np.random.default_rng(11)
+    perfil_ritmo = {
+        "proporcao_pausas": (0.280, 0.025),
+        "duracao_media_pausa_s": (0.450, 0.040),
+        "pausas_longas_por_min": (2.00, 0.25),
+    }
+
+    def sessao(deriva: float = 0.0) -> dict:
+        return {
+            chave: float(rng.normal(media, desvio)) + media * deriva
+            for chave, (media, desvio) in perfil_ritmo.items()
+        }
+
+    historico = [sessao() for _ in range(5)]
+    # Deriva forte, mas TODA no domínio "ritmo".
+    r = avaliar(
+        sessao(deriva=0.6),
+        calcular_linha_base(historico),
+        n_sessoes_base=5,
+    )
+
+    assert len(r.mudancas) >= 3, "as três medidas de ritmo deveriam piorar"
+    assert {m.dominio for m in r.mudancas} == {"ritmo"}
+    assert r.status == "verde", "um domínio só não pode acender o semáforo"
 
 
 def test_vermelho_exige_persistencia():

@@ -31,7 +31,38 @@ export type OpcoesGravador = {
   duracaoMaximaS?: number;
 };
 
+/**
+ * Qualidade da captura. Vai junto com o áudio para o serviço de análise.
+ *
+ * Isto existe porque medida ruim é PIOR que medida ausente: um microfone
+ * saturando inflama o shimmer, e um ganho baixo demais zera a detecção de
+ * pausas. Em vez de produzir número bonito a partir de áudio ruim, medimos a
+ * captura e deixamos o servidor decidir o que é confiável.
+ */
+export type QualidadeCaptura = {
+  /** Taxa real que o navegador entregou (pode ignorar o que pedimos). */
+  taxaAmostragem: number;
+  /** Fração de amostras encostadas no teto. >1% já distorce shimmer. */
+  fracaoSaturada: number;
+  /** Nível médio do sinal, em dBFS. Perto de -60 = quase silêncio. */
+  nivelMedioDbfs: number;
+  /** Nível de pico, em dBFS. */
+  nivelPicoDbfs: number;
+  /** O cancelamento de eco estava ligado? Ele altera o sinal. */
+  cancelamentoDeEco: boolean;
+};
+
 const DURACAO_MAXIMA_PADRAO_S = 15 * 60;
+
+/**
+ * Taxa pedida ao navegador.
+ *
+ * 48 kHz e não 16 kHz de propósito: jitter, shimmer e HNR precisam de taxa
+ * alta para serem confiáveis (o Praat recomenda >= 44,1 kHz). Em 16 kHz essas
+ * três medidas ficam ruidosas, e em 8 kHz (banda de telefonia) são inúteis.
+ * O navegador pode ignorar o pedido, então medimos o que ele deu de fato.
+ */
+const TAXA_DESEJADA = 48000;
 
 export class ProsaGravador {
   private contexto: AudioContext | null = null;
@@ -41,9 +72,15 @@ export class ProsaGravador {
 
   private blocos: Float32Array[] = [];
   private totalAmostras = 0;
-  private taxaAmostragem = 48000;
+  private taxaAmostragem = TAXA_DESEJADA;
   private limiteAmostras = Infinity;
   private gravando = false;
+
+  // Estatísticas acumuladas em uma passada, enquanto o áudio chega.
+  private somaQuadrados = 0;
+  private pico = 0;
+  private amostrasSaturadas = 0;
+  private ecoLigado = true;
 
   constructor(private readonly opcoes: OpcoesGravador) {}
 
@@ -56,8 +93,26 @@ export class ProsaGravador {
     return this.totalAmostras / this.taxaAmostragem;
   }
 
+  /** Qualidade da captura até agora. */
+  qualidade(): QualidadeCaptura {
+    const n = this.totalAmostras || 1;
+    const rms = Math.sqrt(this.somaQuadrados / n);
+    // dBFS: 0 dB = fundo de escala. Piso em -120 para não dar -Infinity.
+    const paraDbfs = (v: number) => (v > 0 ? 20 * Math.log10(v) : -120);
+
+    return {
+      taxaAmostragem: this.taxaAmostragem,
+      fracaoSaturada: this.amostrasSaturadas / n,
+      nivelMedioDbfs: Number(paraDbfs(rms).toFixed(1)),
+      nivelPicoDbfs: Number(paraDbfs(this.pico).toFixed(1)),
+      cancelamentoDeEco: this.ecoLigado,
+    };
+  }
+
   async iniciar(): Promise<void> {
     if (this.gravando) return;
+
+    this.ecoLigado = this.opcoes.cancelamentoDeEco ?? true;
 
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -67,12 +122,17 @@ export class ProsaGravador {
         // As três que importam para a medida:
         noiseSuppression: false, // altera jitter/shimmer
         autoGainControl: false, // destrói a variação de intensidade
-        echoCancellation: this.opcoes.cancelamentoDeEco ?? true,
+        echoCancellation: this.ecoLigado,
+        // Pedido, não garantia — conferimos a taxa real depois.
+        sampleRate: TAXA_DESEJADA,
+        channelCount: 1,
       },
       video: false,
     });
 
-    this.contexto = new AudioContext();
+    // Pedimos a taxa alta também ao AudioContext: se o contexto abrir em
+    // 16 kHz, ele reamostra para baixo e perdemos o que o microfone captou.
+    this.contexto = new AudioContext({ sampleRate: TAXA_DESEJADA });
     this.taxaAmostragem = this.contexto.sampleRate;
     this.limiteAmostras =
       (this.opcoes.duracaoMaximaS ?? DURACAO_MAXIMA_PADRAO_S) *
@@ -85,8 +145,20 @@ export class ProsaGravador {
 
     this.no.port.onmessage = (evento: MessageEvent<Float32Array>) => {
       if (this.totalAmostras >= this.limiteAmostras) return;
-      this.blocos.push(evento.data);
-      this.totalAmostras += evento.data.length;
+
+      const bloco = evento.data;
+      this.blocos.push(bloco);
+      this.totalAmostras += bloco.length;
+
+      // Uma passada só: nível médio, pico e saturação.
+      for (let i = 0; i < bloco.length; i++) {
+        const a = bloco[i];
+        const abs = a < 0 ? -a : a;
+        this.somaQuadrados += a * a;
+        if (abs > this.pico) this.pico = abs;
+        // 0.999 e não 1.0: o conversor já distorce antes de encostar no teto.
+        if (abs >= 0.999) this.amostrasSaturadas++;
+      }
     };
 
     this.fonte.connect(this.no);
@@ -129,13 +201,21 @@ export class ProsaGravador {
    */
   async pararEEnviar(sessaoId: number): Promise<unknown | null> {
     const wav = await this.parar();
+    // Captura a qualidade ANTES de zerar os contadores.
+    const qualidade = this.qualidade();
+
     this.blocos = [];
     this.totalAmostras = 0;
+    this.somaQuadrados = 0;
+    this.pico = 0;
+    this.amostrasSaturadas = 0;
 
     if (!wav) return null;
 
     const formulario = new FormData();
     formulario.append('arquivo', wav, `sessao-${sessaoId}.wav`);
+    // O servidor usa isto para decidir quais medidas são confiáveis.
+    formulario.append('qualidade', JSON.stringify(qualidade));
 
     const resposta = await fetch(
       `${this.opcoes.urlAnalise}/api/sessoes/${sessaoId}/audio`,
@@ -153,6 +233,9 @@ export class ProsaGravador {
     await this.parar();
     this.blocos = [];
     this.totalAmostras = 0;
+    this.somaQuadrados = 0;
+    this.pico = 0;
+    this.amostrasSaturadas = 0;
   }
 }
 

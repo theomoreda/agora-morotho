@@ -43,27 +43,54 @@ DIAS = 14
 # Linha de base da Dona Cida: (média, desvio). Valores plausíveis para uma
 # pessoa de 78 anos conversando por alguns minutos.
 PERFIL = {
+    # ── ritmo ──
     "taxa_articulacao_sil_s": (4.60, 0.22),
+    "taxa_fala_sil_s": (3.30, 0.20),
+    "razao_fala_articulacao": (0.720, 0.040),
     "proporcao_pausas": (0.280, 0.028),
     "duracao_media_pausa_s": (0.450, 0.045),
+    "pausas_longas_por_min": (2.00, 0.50),
+    # ── tom ──
     "variacao_tom_st": (2.60, 0.22),
-    "palavras_por_turno": (11.0, 1.1),
-    "mattr": (0.720, 0.028),
-    "bichos_diferentes": (16.0, 1.4),
+    "amplitude_tom_st": (8.00, 0.80),
+    # ── intensidade ──
+    "variacao_intensidade_db": (7.00, 0.70),
+    # ── qualidade vocal ──
     "jitter_local": (0.0180, 0.0025),
     "shimmer_local": (0.0850, 0.0090),
     "hnr_db": (17.0, 1.3),
+    "fracao_vozeada": (0.520, 0.040),
+    # ── texto ──
+    "palavras_por_turno": (11.0, 1.1),
+    "mattr": (0.720, 0.028),
+    "hesitacoes_por_100": (3.00, 0.90),
+    "repeticao_imediata_por_100": (1.20, 0.50),
+    "proporcao_conteudo": (0.620, 0.030),
+    # ── brincadeira ──
+    "bichos_diferentes": (16.0, 1.4),
 }
 
 # A deriva dos últimos dias. Fração aplicada à média, na direção que significa
 # piora. Cresce devagar: o dia 11 ainda não cruza o limiar, o 12 cruza.
 DERIVA = {
-    "taxa_articulacao_sil_s": -0.16,   # fala mais lenta
-    "proporcao_pausas": +0.42,         # mais tempo em pausa
-    "duracao_media_pausa_s": +0.38,    # pausas mais longas
-    "variacao_tom_st": -0.28,          # fala mais monótona
-    "palavras_por_turno": -0.22,       # respostas mais curtas
-    "bichos_diferentes": -0.32,        # menos bichos no minuto
+    # ritmo
+    "taxa_articulacao_sil_s": -0.16,       # fala mais lenta
+    "taxa_fala_sil_s": -0.24,              # e com mais pausa no meio
+    "razao_fala_articulacao": -0.12,       # pausa come mais da conversa
+    "proporcao_pausas": +0.42,
+    "duracao_media_pausa_s": +0.38,
+    "pausas_longas_por_min": +0.55,        # mais hesitação longa
+    # tom
+    "variacao_tom_st": -0.28,              # fala mais monótona
+    "amplitude_tom_st": -0.22,
+    # intensidade
+    "variacao_intensidade_db": -0.18,
+    # texto
+    "palavras_por_turno": -0.22,           # respostas mais curtas
+    "hesitacoes_por_100": +0.50,
+    "repeticao_imediata_por_100": +0.45,
+    # brincadeira
+    "bichos_diferentes": -0.32,
 }
 
 # Dias 11 a 14: intensidade crescente da deriva (0 = sem deriva).

@@ -18,6 +18,7 @@ Fluxo de uma conversa:
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from datetime import date
@@ -26,7 +27,7 @@ from typing import Any, Optional
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -178,13 +179,21 @@ def janela_brincadeira(sessao_id: int, corpo: JanelaBrincadeira) -> dict:
 
 
 @app.post("/api/sessoes/{sessao_id}/audio")
-async def receber_audio(sessao_id: int, arquivo: UploadFile = File(...)) -> dict:
+async def receber_audio(
+    sessao_id: int,
+    arquivo: UploadFile = File(...),
+    qualidade: Optional[str] = Form(default=None),
+) -> dict:
     """
     Recebe o áudio da conversa, mede e **apaga o arquivo**.
 
     O áudio nunca é persistido. Ele existe como arquivo temporário apenas
     durante esta requisição, porque o Praat lê de disco. O `finally` garante a
     remoção mesmo se a análise falhar.
+
+    `qualidade` é o JSON que o gravador do navegador mediu durante a captura
+    (taxa real, saturação, nível). Alimenta o portão de qualidade: medida que
+    o áudio não sustenta é suprimida em vez de reportada.
     """
     sessao = db.obter_sessao(sessao_id)
     if not sessao:
@@ -194,13 +203,21 @@ async def receber_audio(sessao_id: int, arquivo: UploadFile = File(...)) -> dict
     if not conteudo:
         raise HTTPException(400, "áudio vazio")
 
+    info_qualidade = None
+    if qualidade:
+        try:
+            info_qualidade = json.loads(qualidade)
+        except json.JSONDecodeError:
+            # Qualidade malformada não derruba a análise; só perdemos o portão.
+            info_qualidade = None
+
     caminho_temp = None
     try:
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp.write(conteudo)
             caminho_temp = tmp.name
 
-        medidas = acustica.medir(caminho_temp)
+        medidas = acustica.medir(caminho_temp, info_qualidade)
     except Exception as exc:
         raise HTTPException(422, f"não foi possível analisar o áudio: {exc}")
     finally:
@@ -218,6 +235,8 @@ async def receber_audio(sessao_id: int, arquivo: UploadFile = File(...)) -> dict
 
     return {
         "audio_descartado": True,
+        "confiavel": medidas.confiavel,
+        "avisos": medidas.avisos,
         "medidas_acusticas": medidas.to_dict(),
     }
 
@@ -334,7 +353,12 @@ def dados_painel(pessoa_id: int) -> dict:
         # O painel precisa deixar claro que são dados gerados, não uma pessoa real.
         "dados_simulados": bool(pessoa["simulado"]),
         "sessoes_linha_base": SESSOES_LINHA_BASE,
-        "rotulos": {chave: rotulo for chave, (rotulo, _) in MEDIDAS.items()},
+        "rotulos": {
+            chave: rotulo for chave, (rotulo, _, _) in MEDIDAS.items()
+        },
+        "dominios": {
+            chave: dominio for chave, (_, _, dominio) in MEDIDAS.items()
+        },
         "linha_base": {
             chave: {"media": media, "desvio": desvio}
             for chave, (media, desvio) in linha_base.items()

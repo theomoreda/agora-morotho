@@ -1,16 +1,39 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { RegistrarPWA } from '@/components/RegistrarPWA';
+
+// ADAPTADO NO HACKATHON — original intacto em original-quickstart/app/layout.tsx
+//
+// Três mudanças, todas por acessibilidade:
+//   1. lang 'en' -> 'pt-BR' (leitor de tela precisa saber a língua para
+//      pronunciar certo; em inglês, "Clara" e "conversar" saem errados)
+//   2. maximumScale: 1 REMOVIDO — bloquear pinch-zoom viola a WCAG 1.4.4 e
+//      é exatamente o recurso que quem tem presbiopia usa
+//   3. metadata em português, para o nome na tela inicial
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // Sem maximumScale e sem userScalable: false. A pessoa PRECISA poder dar
+  // zoom. Nosso layout já usa tipografia grande, mas a decisão é dela.
+  themeColor: '#101010',
 };
 
 export const metadata: Metadata = {
-  title: 'Talk to your voice agent | Agora',
+  title: 'Prosa — conversar com a Clara',
   description:
-    "Next.js quickstart: real-time voice agent with live transcript, streaming audio, and low latency from Agora's Conversational AI Engine—API routes in one repo.",
+    'Converse com a Clara todos os dias. Ela faz companhia e percebe quando algo mudou.',
+  applicationName: 'Prosa',
+  appleWebApp: {
+    capable: true,
+    title: 'Prosa',
+    statusBarStyle: 'black-translucent',
+  },
+  formatDetection: {
+    // Evita que o iOS transforme números do transcrito em link de telefone,
+    // o que criaria um jeito de sair do app por acidente.
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -39,8 +62,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full min-h-screen">{children}</body>
+    <html lang="pt-BR" className="h-full">
+      <body className="h-full min-h-screen">
+        {children}
+        <RegistrarPWA />
+      </body>
     </html>
   );
 }

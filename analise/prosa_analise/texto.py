@@ -79,6 +79,21 @@ _STOPWORDS_LEVES = {
     "ao", "aos", "pra", "para", "por", "com", "sem", "ne", "ai", "ah", "eh",
 }
 
+# Marcadores de hesitação em fala espontânea do português brasileiro.
+# Aumento da taxa de hesitação é um dos achados mais consistentes em
+# comprometimento cognitivo leve (ver o estudo de Miami citado no README:
+# a pessoa demora mais para retomar a fala depois de pausas).
+_HESITACOES = {
+    "eh", "ehh", "e", "ah", "ahh", "ahn", "ahm", "hum", "hmm", "uhm", "um",
+    "ne", "tipo", "assim", "sabe", "entao", "quer", "dizer", "como",
+}
+
+# Só as inequívocas. "e", "um", "como" e "quer" também são palavras normais,
+# então ficam fora da contagem para não inflar o número.
+_HESITACOES_SEGURAS = {
+    "eh", "ehh", "ah", "ahh", "ahn", "ahm", "hum", "hmm", "uhm",
+}
+
 
 @dataclass
 class MedidasTexto:
@@ -86,6 +101,12 @@ class MedidasTexto:
     n_palavras: int
     palavras_por_turno: Optional[float]
     mattr: Optional[float]
+    # Hesitações a cada 100 palavras ("eh", "ahn", "hum").
+    hesitacoes_por_100: Optional[float]
+    # Repetição imediata da mesma palavra ("o o carro", "eu eu fui").
+    repeticao_imediata_por_100: Optional[float]
+    # Proporção de palavras de conteúdo — proxy grosseira de densidade de ideia.
+    proporcao_conteudo: Optional[float]
     bichos_diferentes: Optional[int]
     memoria_acertos: Optional[int]
     memoria_total: Optional[int]
@@ -126,6 +147,39 @@ def mattr(tokens: list[str], janela: int = JANELA_MATTR) -> Optional[float]:
         for i in range(len(conteudo) - janela + 1)
     ]
     return sum(razoes) / len(razoes)
+
+
+def contar_hesitacoes(tokens: list[str]) -> int:
+    """Conta marcadores de hesitação inequívocos."""
+    return sum(1 for t in tokens if t in _HESITACOES_SEGURAS)
+
+
+def contar_repeticao_imediata(tokens: list[str]) -> int:
+    """
+    Conta repetição imediata da mesma palavra.
+
+    Em fala espontânea, "o o carro" é disfluência. Ignoramos palavras de uma
+    letra e stopwords muito curtas para não contar gaguejo de transcrição.
+    """
+    return sum(
+        1
+        for anterior, atual in zip(tokens, tokens[1:])
+        if anterior == atual and len(atual) > 2
+    )
+
+
+def proporcao_conteudo(tokens: list[str]) -> Optional[float]:
+    """
+    Fração de palavras que não são stopword.
+
+    Proxy grosseira de densidade de ideia: fala que vira muito conectivo e
+    pouca palavra de conteúdo tende a carregar menos informação por frase.
+    Grosseira mesmo — não substitui análise de densidade proposicional.
+    """
+    if len(tokens) < 10:
+        return None
+    conteudo = sum(1 for t in tokens if t not in _STOPWORDS_LEVES)
+    return conteudo / len(tokens)
 
 
 def contar_bichos(texto: str) -> int:
@@ -229,6 +283,16 @@ def medir(
 
     ppt = (len(tokens) / len(turnos)) if turnos else None
 
+    por_100 = (100.0 / len(tokens)) if tokens else None
+    hesitacoes = (
+        contar_hesitacoes(tokens) * por_100 if por_100 and len(tokens) >= 20 else None
+    )
+    repeticoes = (
+        contar_repeticao_imediata(tokens) * por_100
+        if por_100 and len(tokens) >= 20
+        else None
+    )
+
     bichos = contar_bichos(texto_fluencia) if texto_fluencia else None
 
     acertos = total = None
@@ -244,6 +308,9 @@ def medir(
         n_palavras=len(tokens),
         palavras_por_turno=ppt,
         mattr=mattr(tokens),
+        hesitacoes_por_100=hesitacoes,
+        repeticao_imediata_por_100=repeticoes,
+        proporcao_conteudo=proporcao_conteudo(tokens),
         bichos_diferentes=bichos,
         memoria_acertos=acertos,
         memoria_total=total,

@@ -58,20 +58,38 @@ dias — bate-papo, memórias, família. Dentro da conversa entram três
 | O minuto dos bichos | Falar o máximo de bichos em 1 minuto | fluência verbal |
 | O dia de hoje | "Que dia da semana é hoje?" | orientação |
 
-De cada conversa o Prosa extrai **10 medidas** — de voz e de texto — e compara
-com a **linha de base da própria pessoa** (as 5 primeiras conversas):
+De cada conversa o Prosa extrai **19 medidas**, agrupadas em **6 domínios**, e
+compara com a **linha de base da própria pessoa** (as 5 primeiras conversas):
 
-| Tipo | Medida | Sinal de mudança |
+| Domínio | Medidas | Sinal de mudança |
 |---|---|---|
-| Voz | Velocidade de articulação (sílabas/s) | ↓ lentificação |
-| Voz | Proporção de tempo em pausas | ↑ |
-| Voz | Duração média das pausas | ↑ |
-| Voz | Variação do tom (semitons) | ↓ monotonia |
-| Voz | Jitter, shimmer | ↑ irregularidade |
-| Voz | HNR | ↓ clareza |
-| Texto | Palavras por turno | ↓ |
-| Texto | Variedade de vocabulário (MATTR) | ↓ |
-| Tarefa | Bichos diferentes no minuto | ↓ |
+| **Ritmo** | velocidade de articulação, ritmo geral, fluidez (fala vs. pausa), tempo em pausas, duração das pausas, pausas longas/min | ↓ lentificação, ↑ pausas |
+| **Tom** | variação do tom (semitons), alcance do tom (p5–p95) | ↓ monotonia |
+| **Intensidade** | variação do volume | ↓ monotonia |
+| **Qualidade vocal** | jitter, shimmer, HNR, fração vozeada | ↑ irregularidade, ↓ clareza |
+| **Texto** | palavras por turno, variedade (MATTR), hesitações/100, repetição imediata/100, densidade de conteúdo | ↓ tamanho e variedade, ↑ disfluência |
+| **Brincadeira** | bichos diferentes no minuto | ↓ fluência |
+
+**Por que domínios e não só medidas:** as medidas não são independentes. "tempo
+em pausas", "duração das pausas" e "pausas longas" medem quase a mesma coisa —
+três delas piorando é **um** sinal, não três. O alerta exige piora em medidas de
+**domínios diferentes**, para só acender quando a mudança aparece em aspectos
+distintos da fala.
+
+### O portão de qualidade
+
+Medida ruim é **pior** que medida ausente: um microfone saturando infla o
+shimmer e acenderia um alerta falso. Então o gravador mede a própria captura
+(taxa real, saturação, nível) e o servidor **suprime** o que o áudio não
+sustenta:
+
+| Condição | O que acontece |
+|---|---|
+| Taxa < 22.050 Hz | jitter, shimmer e HNR são **suprimidos** (em 8 kHz, banda de telefonia, são inúteis) |
+| > 1% das amostras no teto | sessão inteira descartada — microfone saturando |
+| Nível médio < −50 dBFS | sessão descartada — microfone longe ou mudo |
+| < 3 s de fala detectada | sessão descartada |
+| Cancelamento de eco ligado | medido, mas com aviso registrado |
 
 Semáforo no painel da família:
 
@@ -79,7 +97,7 @@ Semáforo no painel da família:
 |---|---|---|
 | ⚪ calibrando | menos de 5 conversas | "Ainda conhecendo o jeito dela de falar" |
 | 🟢 verde | dentro do padrão dela | "Dentro do normal dela" |
-| 🟡 amarelo | 3+ medidas pioram ≥2,5 desvios **e** ≥10% | "Algo mudou hoje" |
+| 🟡 amarelo | **4+ medidas** pioram ≥2,5 desvios **e** ≥10%, em **≥2 domínios** | "Algo mudou hoje" |
 | 🔴 vermelho | o amarelo se repete na conversa seguinte | "Vale procurar um profissional" |
 
 A mensagem é sempre descritiva — *"duração das pausas +55%, tempo em pausas
@@ -94,6 +112,34 @@ A mensagem é sempre descritiva — *"duração das pausas +55%, tempo em pausas
    mais madura: um modelo de voz específico para cada paciente. No estudo
    DETECT-HF (563 pacientes, 46 centros) previu mais de 70% dos eventos, em
    média 24,6 dias antes.
+
+### A interface: um botão, instalável
+
+O Prosa é um **PWA**. A família instala uma vez no celular da pessoa idosa e,
+dali em diante, é um ícone na tela inicial — sem loja, sem conta, sem termo
+para aceitar, sem atualização.
+
+Decisões de acessibilidade, todas pensadas para quem tem 78 anos e mexe pouco
+em celular:
+
+| Decisão | Por quê |
+|---|---|
+| **Um** alvo de toque, de 6,5 rem | nada de menu, aba, login ou campo de texto |
+| `display: fullscreen` no manifesto | sem barra de endereço e sem botão de voltar: não dá para sair por acidente |
+| Fonte grande e contraste alto | presbiopia e catarata são a regra, não a exceção |
+| **Pinch-zoom liberado** | o quickstart vinha com `maximumScale: 1`, que bloqueia o zoom — violação da WCAG 1.4.4 e justamente o recurso que ela usa |
+| `lang="pt-BR"` | leitor de tela precisa da língua certa para pronunciar |
+| Sem gesto nenhum | nada de arrastar, segurar ou toque duplo |
+| Convite de instalação só com `?instalar=1` | quem instala é a família, não ela — decidir isso sem contexto é como ela se perde |
+| `telephone: false` | evita o iOS virar número do transcrito em link e criar uma saída acidental |
+| Tela de "sem internet" em português simples | diz o que fazer, não o que deu errado; nenhum código de erro |
+
+O que deliberadamente **não** fazemos: fingir funcionar offline. Conversar
+exige rede em tempo real, e um app que abre bonito e falha no meio é pior, para
+esta pessoa, do que um que avisa logo. O cache guarda a casca, nunca a conversa.
+
+**O semáforo não aparece para ela.** Mostrar alerta de saúde para a própria
+pessoa seria assustador e não é o produto. Quem vê tendência é a família.
 
 ## 3. Onde entra a Agora
 
@@ -223,8 +269,9 @@ Sem isso a Clara conversa normalmente, mas as medidas de texto ficam vazias.
 ### Verificação
 
 ```bash
-cd analise && .venv/Scripts/python -m pytest -q      # 13 testes
-cd analise && .venv/Scripts/python -m scripts.validar
+cd analise && .venv/Scripts/python -m pytest -q        # 17 testes
+cd analise && .venv/Scripts/python -m scripts.validar  # falso alarme, dias até avisar
+cd analise && .venv/Scripts/python -m scripts.calibrar # varredura dos limiares
 cd app && npm run lint && npm run build
 agora project doctor
 ```
@@ -275,8 +322,14 @@ nada em `app/` ou `analise/` depende dela.
 | `app/lib/prosa-api.ts` | cliente do serviço de análise |
 | `app/hooks/use-prosa.ts` | liga a conversa às medidas |
 | `app/components/TelaUmBotao.tsx` | tela acessível, um botão só |
+| `app/components/RegistrarPWA.tsx` | service worker + convite de instalação |
+| `app/app/manifest.ts` | manifesto do PWA |
+| `app/public/sw.js` | service worker (casca + tela de sem internet) |
+| `app/public/offline.html` | tela de "sem internet" em linguagem simples |
 | `app/public/prosa-worklet.js` | AudioWorklet que extrai o PCM |
 | `analise/` (inteiro) | serviço de análise, painel, seed, validação, testes |
+| `analise/scripts/calibrar.py` | varredura que escolheu os limiares do semáforo |
+| `analise/scripts/criar_pessoa.py` | cria a pessoa real que vai conversar |
 
 **Arquivos do quickstart que alteramos:**
 
@@ -287,6 +340,7 @@ nada em `app/` ou `analise/` depende dela.
 | `components/LandingPage.tsx` | abre a sessão do Prosa antes do join; usa a tela de um botão |
 | `components/ConversationComponent.tsx` | chama `useProsa`; encerra a sessão antes de desligar |
 | `types/conversation.ts` | campo `prosa_sessao_id` |
+| `app/layout.tsx` | `lang` pt-BR; **remoção do `maximumScale: 1`** que bloqueava o zoom; metadados de PWA |
 | `env.local.example` | variáveis do Prosa |
 
 Arquitetura, fluxo de token, nomes de env, ciclo de vida e comandos
@@ -323,49 +377,73 @@ dias 12–14  🔴 vermelho       a mudança se manteve
 
 ### O que medimos
 
-**1. Falso alarme** (`scripts/validar.py`) — 3.000 conversas de uma pessoa
-totalmente estável, passando pela mesma regra de decisão de produção.
+**1. Falso alarme** (`scripts/validar.py`) — milhares de conversas de uma
+pessoa totalmente estável, passando pela mesma regra de decisão de produção.
 Qualquer alerta aqui é falso positivo por definição.
 
 | | |
 |---|---|
-| Falsos amarelos | **9 em 3.000** |
-| Taxa por conversa | **0,30%** |
-| Na prática | 1 falso alarme a cada ~333 conversas (~11 meses no uso diário) |
+| Taxa por conversa | **0,20%** |
+| Na prática | 1 falso alarme a cada ~500 conversas (~17 meses no uso diário) |
 
-**2. Sensibilidade** — com que frequência o semáforo acende, por intensidade
-de deriva:
+**2. Sensibilidade por conversa** — por intensidade de deriva:
 
 | Intensidade da deriva | Detecção |
 |---:|---:|
-| 0,25 | 4,0% |
-| 0,50 | 26,4% |
-| 0,75 | 76,6% |
-| 1,00 (cenário do seed) | **97,1%** |
-| 1,25 | 99,9% |
+| 0,25 | 3,2% |
+| 0,50 | 37,2% |
+| 0,75 | 86,1% |
+| 1,00 (cenário do seed) | **99,2%** |
+| 1,25 | 100,0% |
 
-Lido honestamente: deriva leve passa batido. O Prosa pega mudança consistente,
-não sutileza.
+**3. Dias até avisar a família** — a métrica que realmente importa, porque a
+Clara conversa **todos os dias**: deriva real reaparece amanhã.
 
-**3. Teste-reteste (ICC)** — `scripts/validar.py` calcula ICC(1) por medida
+| Deriva | Avisou em 21 dias | Mediana 🟡 | Mediana 🔴 |
+|---:|---:|---:|---:|
+| 0,50 (sutil) | **98,5%** | 2 dias | 5 dias |
+| 0,75 | 99,8% | 1 dia | 2 dias |
+| 1,00 | 100,0% | 1 dia | 2 dias |
+
+Sensibilidade de 37% por conversa **não** significa que 63% das derivas passam
+batido — significa que levam alguns dias. Em deriva sutil, a família é avisada
+em 98,5% dos casos, com mediana de 2 dias.
+
+**4. Teste-reteste (ICC)** — `scripts/validar.py` calcula ICC(1) por medida
 sobre as gravações reais que estiverem no banco. Precisa de pelo menos 2
 pessoas com 2 conversas cada.
 
-### Um achado que mudou o produto
+### Dois achados que mudaram o produto
 
-A regra inicial do nosso projeto era **2 medidas × 2,0 desvios**, com linha de
-base a partir de 3 conversas. Rodando o seed, ela acendeu **falso amarelo em 2
-dos 10 dias estáveis**. Duas causas reais:
+**Achado 1 — a regra original acendia sozinha.** A primeira regra era 2 medidas
+× 2,0 desvios, com linha de base a partir de 3 conversas. Rodando o seed, ela
+deu **falso amarelo em 2 dos 10 dias estáveis**. Causas medidas: desvio-padrão
+estimado com 3 pontos é ruidoso e enviesado para baixo; e testando 10 medidas
+exigindo só 2, o acaso basta.
 
-1. Desvio-padrão estimado com 3 pontos é ruidoso e enviesado para baixo.
-2. Testando 10 medidas e exigindo só 2, o acaso basta (~2% por conversa).
+**Achado 2 — mais medidas pioraram o falso alarme.** Ao enriquecer de 10 para
+19 medidas, a sensibilidade subiu (26% → 60% em deriva sutil) mas o falso
+alarme **saltou de 0,30% para 1,37%** por conversa — comparações múltiplas.
 
-Apertamos para **5 conversas de base × 2,5 desvios × 3 medidas**. O falso
-alarme caiu para 0,30% e a detecção da deriva se manteve em 97%.
+Em vez de chutar limiares novos, escrevemos `scripts/calibrar.py`, que varre 18
+combinações de (desvios, nº de medidas, nº de domínios) e mede falso alarme e
+sensibilidade em cada uma:
 
-**Ressalva que não escondemos:** as 10 medidas **não** são independentes entre
-si — "tempo em pausas" e "duração das pausas" andam juntas. Como a simulação
-assume ruído independente, o falso alarme real deve ser **maior** que 0,30%.
+| z | medidas | domínios | Falso alarme | Sensibilidade |
+|---:|---:|---:|---:|---:|
+| 2,5 | 3 | 2 | 1,20% | 60,9% |
+| **2,5** | **4** | **2** | **0,17%** | **37,4%** ← escolhida |
+| 3,0 | 3 | 2 | 0,20% | 31,7% |
+| 3,0 | 4 | 2 | 0,00% | 12,6% |
+
+Critério: falso alarme ≤ 0,30% e, entre as aprovadas, a mais sensível. A
+escolha se justifica pelo item 3 acima — a cadência diária recupera a
+sensibilidade perdida, e alarme falso só queima a confiança da família.
+
+**Ressalva que não escondemos:** a simulação assume ruído normal e
+**independente** entre as medidas. Na vida real elas são correlacionadas, então
+o falso alarme verdadeiro é **maior** que 0,20%. A regra de domínios mitiga,
+mas não elimina. O número honesto só sai de dados reais, com mais pessoas.
 
 ## 10. LGPD e ética
 
