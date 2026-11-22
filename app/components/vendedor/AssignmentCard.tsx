@@ -43,7 +43,9 @@ export function AssignmentCard({ atribuicao, cenario }: AssignmentCardProps) {
         </Button>
       ) : (
         <Button asChild className="w-full gap-2">
-          <Link href={`/vendedor/simulacao/${cenario.id}`}>
+          <Link
+            href={`/vendedor/simulacao/${cenario.id}?atribuicao=${atribuicao.id}`}
+          >
             <Phone className="h-4 w-4" />
             Iniciar simulação
           </Link>

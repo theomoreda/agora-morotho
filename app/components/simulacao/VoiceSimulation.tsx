@@ -58,8 +58,11 @@ const AgoraProvider = dynamic(
 
 type VoiceSimulationProps = {
   cenario: Cenario;
-  /** Chamado quando o vendedor encerra a conversa. */
-  onFinish?: () => void;
+  /**
+   * Chamado quando o vendedor conclui a tela de veredito. Recebe o veredito
+   * calculado para que a página possa persistir a avaliação.
+   */
+  onFinish?: (veredito: Veredito | null) => void;
 };
 
 /**
@@ -234,7 +237,7 @@ export default function VoiceSimulation({
                 Veredito da simulação
               </h2>
               <VerdictCard veredito={veredito} />
-              <Button className="w-full" onClick={() => onFinish?.()}>
+              <Button className="w-full" onClick={() => onFinish?.(veredito)}>
                 Concluir
               </Button>
             </div>

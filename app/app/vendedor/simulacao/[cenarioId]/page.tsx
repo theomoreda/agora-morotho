@@ -1,12 +1,14 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { Suspense, use, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { obterCenario } from '@/lib/data-provider';
-import type { Cenario } from '@/lib/types';
+import { obterCenario, registrarAvaliacao } from '@/lib/data-provider';
+import { avaliacaoDoVeredito } from '@/lib/avaliacao-from-veredito';
+import { VENDEDOR_ATUAL_ID } from '@/lib/sessao-demo';
+import type { Cenario, Veredito } from '@/lib/types';
 
 // VoiceSimulation é browser-only (RTC/RTM da Agora).
 const VoiceSimulation = dynamic(
@@ -20,7 +22,19 @@ export default function SimulacaoPage({
   params: Promise<{ cenarioId: string }>;
 }) {
   const { cenarioId } = use(params);
+  return (
+    <Suspense
+      fallback={<p className="text-sm text-muted-foreground">Carregando...</p>}
+    >
+      <SimulacaoInner cenarioId={cenarioId} />
+    </Suspense>
+  );
+}
+
+function SimulacaoInner({ cenarioId }: { cenarioId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const atribuicaoId = searchParams.get('atribuicao');
   const [cenario, setCenario] = useState<Cenario | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +44,23 @@ export default function SimulacaoPage({
       setLoading(false);
     });
   }, [cenarioId]);
+
+  // Fecha o loop: transforma o veredito em avaliação, persiste (marcando a
+  // atribuição como concluída) e leva para a tela de resultado.
+  const handleFinish = async (veredito: Veredito | null) => {
+    if (!veredito) {
+      router.push('/vendedor');
+      return;
+    }
+    const avaliacao = avaliacaoDoVeredito({
+      veredito,
+      cenarioId,
+      vendedorId: VENDEDOR_ATUAL_ID,
+      atribuicaoId,
+    });
+    await registrarAvaliacao(avaliacao, atribuicaoId);
+    router.push(`/vendedor/resultado/${avaliacao.id}`);
+  };
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -50,10 +81,7 @@ export default function SimulacaoPage({
 
   return (
     <div className="-m-6 md:-m-8">
-      <VoiceSimulation
-        cenario={cenario}
-        onFinish={() => router.push('/vendedor')}
-      />
+      <VoiceSimulation cenario={cenario} onFinish={handleFinish} />
     </div>
   );
 }

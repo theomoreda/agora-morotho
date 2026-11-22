@@ -172,3 +172,27 @@ Etapas 1–4 implementadas e verificadas (`pnpm typecheck`, `lint`, `verify:api`
   `lib/sessao-demo.ts`).
 - Para a voz funcionar, `.env.local` precisa das credenciais da Agora
   (`NEXT_PUBLIC_AGORA_APP_ID`, `NEXT_AGORA_APP_CERTIFICATE`).
+
+---
+
+## Loop conversa → avaliação → dashboard (implementado)
+
+Ao encerrar a simulação, o veredito vira uma `Avaliacao` persistida e o painel
+reflete o resultado, sem back-end:
+
+- `lib/mock/store.ts`: store mutável em memória (semeado pelos fixtures,
+  preservado no `globalThis` contra hot-reload). `salvarAvaliacao` grava a
+  avaliação, marca a atribuição como concluída e recalcula a média do vendedor.
+- `lib/avaliacao-from-veredito.ts`: mapeia o veredito binário para a `Avaliacao`
+  (nota 100/0, uma linha por critério do veredito, evidência = frase).
+- `lib/data-provider.ts`: passou a ler/escrever no store; novo
+  `registrarAvaliacao`.
+- Fluxo: `AssignmentCard` manda `?atribuicao=<id>` para a simulação →
+  `VoiceSimulation` devolve o veredito no `onFinish` → a página persiste e
+  navega para `/vendedor/resultado/<id>`.
+- Verificação: `scripts/verify-loop.ts` (mapeamento apto/não apto, persistência,
+  atribuição concluída, média recalculada).
+
+Limitação declarada: o store vive na memória de uma instância e some num reload
+completo. Suficiente para a demo; a interface do `data-provider` está pronta
+para trocar por banco.

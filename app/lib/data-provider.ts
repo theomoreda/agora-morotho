@@ -1,19 +1,12 @@
 /**
  * Ponto único de acesso a dados.
  *
- * Hoje lê dos mocks em `lib/mock`. Quando o back-end existir, basta trocar o
- * corpo destas funções por chamadas HTTP — a assinatura (Promise) já está
- * pronta para isso. Nenhuma página fala com os mocks diretamente.
+ * Lê e escreve no store em memória (`lib/mock/store.ts`), que é semeado com os
+ * fixtures. Quando o back-end existir, basta trocar o corpo destas funções por
+ * chamadas HTTP — a assinatura (Promise) já está pronta. Nenhuma página fala
+ * com o store diretamente.
  */
-import {
-  ATRIBUICOES,
-  AVALIACOES,
-  CENARIOS,
-  CRITERIOS_PADRAO,
-  MATERIAIS,
-  PRODUTOS,
-  VENDEDORES,
-} from '@/lib/mock/data';
+import { store, salvarAvaliacao } from '@/lib/mock/store';
 import type {
   Atribuicao,
   Avaliacao,
@@ -32,67 +25,83 @@ function delay<T>(value: T, ms = 150): Promise<T> {
 // ── Biblioteca ──────────────────────────────────────────────────────────────
 
 export function listarProdutos(): Promise<Produto[]> {
-  return delay(PRODUTOS);
+  return delay(store.produtos);
 }
 
 export function listarMateriais(): Promise<Material[]> {
-  return delay(MATERIAIS);
+  return delay(store.materiais);
 }
 
 export function obterProduto(id: string): Promise<Produto | null> {
-  return delay(PRODUTOS.find((p) => p.id === id) ?? null);
+  return delay(store.produtos.find((p) => p.id === id) ?? null);
 }
 
 // ── Critérios (rubrica) ─────────────────────────────────────────────────────
 
 export function obterRubricaPadrao(): Promise<Criterio[]> {
-  return delay(CRITERIOS_PADRAO);
+  return delay(store.criterios);
 }
 
 // ── Cenários ────────────────────────────────────────────────────────────────
 
 export function listarCenarios(): Promise<Cenario[]> {
-  return delay(CENARIOS);
+  return delay(store.cenarios);
 }
 
 export function obterCenario(id: string): Promise<Cenario | null> {
-  return delay(CENARIOS.find((c) => c.id === id) ?? null);
+  return delay(store.cenarios.find((c) => c.id === id) ?? null);
 }
 
 // ── Vendedores ──────────────────────────────────────────────────────────────
 
 export function listarVendedores(): Promise<Vendedor[]> {
-  return delay(VENDEDORES);
+  return delay(store.vendedores);
 }
 
 export function obterVendedor(id: string): Promise<Vendedor | null> {
-  return delay(VENDEDORES.find((v) => v.id === id) ?? null);
+  return delay(store.vendedores.find((v) => v.id === id) ?? null);
 }
 
 // ── Atribuições ─────────────────────────────────────────────────────────────
 
 export function listarAtribuicoes(): Promise<Atribuicao[]> {
-  return delay(ATRIBUICOES);
+  return delay(store.atribuicoes);
 }
 
 export function listarAtribuicoesDoVendedor(
   vendedorId: string,
 ): Promise<Atribuicao[]> {
-  return delay(ATRIBUICOES.filter((a) => a.vendedorId === vendedorId));
+  return delay(store.atribuicoes.filter((a) => a.vendedorId === vendedorId));
+}
+
+export function obterAtribuicao(id: string): Promise<Atribuicao | null> {
+  return delay(store.atribuicoes.find((a) => a.id === id) ?? null);
 }
 
 // ── Avaliações ──────────────────────────────────────────────────────────────
 
 export function listarAvaliacoes(): Promise<Avaliacao[]> {
-  return delay(AVALIACOES);
+  return delay(store.avaliacoes);
 }
 
 export function obterAvaliacao(id: string): Promise<Avaliacao | null> {
-  return delay(AVALIACOES.find((a) => a.id === id) ?? null);
+  return delay(store.avaliacoes.find((a) => a.id === id) ?? null);
 }
 
 export function listarAvaliacoesDoVendedor(
   vendedorId: string,
 ): Promise<Avaliacao[]> {
-  return delay(AVALIACOES.filter((a) => a.vendedorId === vendedorId));
+  return delay(store.avaliacoes.filter((a) => a.vendedorId === vendedorId));
+}
+
+/**
+ * Persiste uma avaliação e liga-a à atribuição (marcando como concluída).
+ * É o que fecha o loop ao fim de uma simulação.
+ */
+export function registrarAvaliacao(
+  avaliacao: Avaliacao,
+  atribuicaoId: string | null,
+): Promise<Avaliacao> {
+  salvarAvaliacao(avaliacao, atribuicaoId);
+  return delay(avaliacao, 0);
 }
