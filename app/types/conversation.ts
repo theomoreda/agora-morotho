@@ -38,6 +38,12 @@ export interface ConversationComponentProps {
   agoraData: AgoraTokenData;
   rtmClient: RTMClient;
   onTokenWillExpire: (uid: string) => Promise<AgoraRenewalTokens>;
-  /** Recebe os turnos atribuídos da conversa, para o veredito pós-chamada. */
-  onEndConversation: (turnos: import('@/lib/types').Turno[]) => void;
+  /**
+   * Recebe os turnos atribuídos da conversa e o tempo, em segundos, entre a
+   * primeira fala transcrita e o encerramento.
+   */
+  onEndConversation: (
+    turnos: import('@/lib/types').Turno[],
+    duracaoSeg: number,
+  ) => void;
 }

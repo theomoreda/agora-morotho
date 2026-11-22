@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { PageHeader, SectionHeader } from '@/components/shared/PageHeader';
 import { Card } from '@/components/ui/card';
 import { ScoreBadge } from '@/components/shared/ScoreBadge';
 import { TeamOverviewCard } from '@/components/gestor/TeamOverviewCard';
@@ -63,8 +63,8 @@ export default function GestorDashboard() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3">
+        <div className="page-sections">
+          <div className="grid gap-5 sm:grid-cols-3">
             <StatCard label="Vendedores" value={String(vendedores.length)} />
             <StatCard
               label="Simulações concluídas"
@@ -78,19 +78,17 @@ export default function GestorDashboard() {
             mediaEquipe={mediaEquipe}
           />
 
-          <Card>
-            <h3 className="mb-4 text-sm font-semibold text-white">
-              Avaliações recentes
-            </h3>
-            <div className="divide-y divide-border">
+          <section>
+            <SectionHeader title="Avaliações recentes" />
+            <Card className="divide-y divide-border py-2">
               {avaliacoes.map((a) => (
                 <Link
                   key={a.id}
                   href={`/gestor/avaliacoes/${a.id}`}
-                  className="flex items-center justify-between gap-4 py-3 transition-colors hover:text-white"
+                  className="flex items-center justify-between gap-4 py-3 transition-colors hover:text-foreground"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {vendedorNome(a.vendedorId)}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -101,8 +99,8 @@ export default function GestorDashboard() {
                   <ScoreBadge nota={a.notaFinal} />
                 </Link>
               ))}
-            </div>
-          </Card>
+            </Card>
+          </section>
         </div>
       )}
     </div>
@@ -112,8 +110,8 @@ export default function GestorDashboard() {
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <Card>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
+      <p className="type-label">{label}</p>
+      <p className="mt-2 font-display text-4xl font-semibold leading-none text-foreground">{value}</p>
     </Card>
   );
 }

@@ -1,5 +1,18 @@
 import type { Metadata, Viewport } from 'next';
+import { Faustina, Geist } from 'next/font/google';
 import './globals.css';
+
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const faustina = Faustina({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -39,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="h-full">
+    <html lang="pt-BR" className={`h-full ${geist.variable} ${faustina.variable}`}>
       <body className="h-full min-h-screen">{children}</body>
     </html>
   );

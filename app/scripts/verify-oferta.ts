@@ -49,26 +49,67 @@ function verifyPromptNaoPedeRepeticao() {
     'O prompt deveria continuar mandando consultar a política',
   );
   assert(
+    prompt.includes('Nunca repita uma frase'),
+    'O prompt deveria proibir o cliente de repetir falas já ditas',
+  );
+  assert(
+    prompt.includes('não falas prontas'),
+    'As objeções do cenário deveriam ir como temas, não como falas para recitar',
+  );
+  assert(
+    !prompt.includes('SEMPRE que o vendedor'),
+    'O prompt não deveria mandar citar a política a cada menção de desconto',
+  );
+  assert(
+    prompt.includes('nunca cite "política"'),
+    'O cliente não deveria ensinar a política ao vendedor',
+  );
+  assert(
+    prompt.includes('tchau') && prompt.includes('entre 6 e 10 falas'),
+    'O prompt deveria levar a conversa a uma decisão com despedida',
+  );
+
+  const comMateriais = montarPromptCliente({
+    cenario,
+    materiais: [
+      { id: 'a', titulo: 'Catálogo', tipo: 'catalogo', conteudo: 'fibra 600 Mega', atualizadoEm: '' },
+      { id: 'b', titulo: 'Política', tipo: 'politica', conteudo: 'desconto máximo 10%', atualizadoEm: '' },
+    ],
+  });
+  assert(
+    comMateriais.includes('fibra 600 Mega') && !comMateriais.includes('desconto máximo 10%'),
+    'Material de política não deveria chegar ao cliente',
+  );
+  assert(
     !prompt.toLowerCase().includes('você pode repetir? não entendi'),
     'O prompt não deveria ensinar a frase que ignorou a oferta da Claro',
   );
 }
 
 function verifyFish() {
+  type Cfg = {
+    vendor?: string;
+    credential_mode?: string;
+    params?: { api_key?: string; reference_id?: string; backend?: string };
+  };
   process.env.PROSA_FISH_API_KEY = 'chave-de-teste';
   process.env.PROSA_FISH_VOICE_ID = 'voz-de-teste';
   delete process.env.PROSA_FISH_BACKEND;
-  const cfg = vozDoCliente().toConfig() as {
-    vendor?: string;
-    params?: { api_key?: string; reference_id?: string; backend?: string };
-  };
-  assert(cfg.vendor === 'fishaudio', 'A voz da ligação deveria ser fishaudio');
-  assert(cfg.params?.reference_id === 'voz-de-teste', 'O id da voz deveria vir do ambiente');
-  assert(cfg.params?.backend === 'speech-1.5', 'O backend padrão do SDK é speech-1.5');
-  assert(
-    typeof cfg.params?.api_key === 'string' && cfg.params.api_key.length > 0,
-    'A chave deveria ir no config, sem aparecer no log',
-  );
+  delete process.env.PROSA_FISH_CREDENTIAL;
+
+  const gerenciado = vozDoCliente().toConfig() as Cfg;
+  assert(gerenciado.vendor === 'fishaudio', 'A voz da ligação deveria ser fishaudio');
+  assert(gerenciado.credential_mode === 'managed', 'O padrão deveria ser o modo gerenciado');
+  assert(gerenciado.params?.reference_id === 'voz-de-teste', 'O id da voz deveria vir do ambiente');
+  assert(gerenciado.params?.backend === 's2.1-pro', 'O modo gerenciado usa s2.1-pro');
+  assert(gerenciado.params?.api_key === undefined, 'O modo gerenciado não envia chave');
+
+  process.env.PROSA_FISH_CREDENTIAL = 'byok';
+  const byok = vozDoCliente().toConfig() as Cfg;
+  delete process.env.PROSA_FISH_CREDENTIAL;
+  assert(byok.credential_mode === undefined, 'byok não envia credential_mode');
+  assert(byok.params?.backend === 'speech-1.5', 'O backend padrão do byok é speech-1.5');
+  assert(byok.params?.api_key === 'chave-de-teste', 'byok envia a chave própria');
 
   const direto = new FishAudioTTS({
     key: 'outra',

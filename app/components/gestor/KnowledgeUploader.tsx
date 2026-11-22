@@ -21,7 +21,7 @@ const EXTENSOES_ACEITAS = ['.txt', '.md', '.csv', '.json'];
 const MAX_CONTEUDO = 20_000;
 
 export const inputClass =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-primary';
+  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary';
 
 type KnowledgeUploaderProps = {
   produtos: Produto[];
@@ -91,8 +91,8 @@ export function KnowledgeUploader({ produtos, onSalvo, onCancelar }: KnowledgeUp
   }
 
   return (
-    <Card className="space-y-4">
-      <h2 className="text-sm font-semibold text-white">Novo material de contexto</h2>
+    <Card className="space-y-5">
+      <h2 className="type-section-title">Novo material de contexto</h2>
 
       <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
         <input
@@ -127,7 +127,7 @@ export function KnowledgeUploader({ produtos, onSalvo, onCancelar }: KnowledgeUp
         )}
       >
         {arquivo ? (
-          <div className="flex items-center gap-2 text-sm text-white">
+          <div className="flex items-center gap-2 text-sm text-foreground">
             <FileText className="h-4 w-4 text-primary" />
             {arquivo}
             <button
@@ -142,7 +142,7 @@ export function KnowledgeUploader({ produtos, onSalvo, onCancelar }: KnowledgeUp
         ) : (
           <>
             <UploadCloud className="h-6 w-6 text-muted-foreground" />
-            <p className="text-sm text-white">Arraste um arquivo ou</p>
+            <p className="text-sm text-foreground">Arraste um arquivo ou</p>
             <Button
               type="button"
               variant="outline"
@@ -195,7 +195,7 @@ export function KnowledgeUploader({ produtos, onSalvo, onCancelar }: KnowledgeUp
                 key={p.id}
                 className={cn(
                   'flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground',
-                  produtoIds.includes(p.id) && 'border-primary text-white',
+                  produtoIds.includes(p.id) && 'border-primary text-foreground',
                 )}
               >
                 <input

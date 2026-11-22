@@ -12,6 +12,7 @@ import type {
   Avaliacao,
   Cenario,
   Criterio,
+  Habilitacao,
   Material,
   Produto,
   TipoMaterial,
@@ -124,6 +125,32 @@ export function listarVendedores(): Promise<Vendedor[]> {
 
 export function obterVendedor(id: string): Promise<Vendedor | null> {
   return delay(store.vendedores.find((v) => v.id === id) ?? null);
+}
+
+// ── Habilitações ────────────────────────────────────────────────────────────
+// Passam pela rota `/api/habilitacoes`: o gestor grava e o vendedor lê o mesmo
+// registro, em abas diferentes.
+
+export async function obterHabilitacao(vendedorId: string): Promise<Habilitacao> {
+  const resposta = await fetch(
+    `/api/habilitacoes?vendedorId=${encodeURIComponent(vendedorId)}`,
+    { cache: 'no-store' },
+  );
+  if (!resposta.ok) throw new Error('Falha ao carregar as habilitações');
+  return resposta.json();
+}
+
+export async function salvarHabilitacaoDoVendedor(
+  habilitacao: Habilitacao,
+): Promise<Habilitacao> {
+  const resposta = await fetch('/api/habilitacoes', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(habilitacao),
+  });
+  const dados = await resposta.json();
+  if (!resposta.ok) throw new Error(dados.error ?? 'Falha ao salvar');
+  return dados;
 }
 
 // ── Atribuições ─────────────────────────────────────────────────────────────

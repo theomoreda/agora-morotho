@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
   obterCenario,
+  obterHabilitacao,
   obterProduto,
   registrarAvaliacao,
 } from '@/lib/data-provider';
-import { avaliacaoDoVeredito } from '@/lib/avaliacao-from-veredito';
+import { avaliacaoDaAnalise } from '@/lib/avaliacao-from-analise';
 import { VENDEDOR_ATUAL_ID } from '@/lib/sessao-demo';
-import type { Cenario, Produto, Veredito } from '@/lib/types';
+import type { AnaliseSessao, Cenario, Produto } from '@/lib/types';
 
 // VoiceSimulation é browser-only (RTC/RTM da Agora).
 const VoiceSimulation = dynamic(
@@ -42,28 +43,33 @@ function SimulacaoInner({ cenarioId }: { cenarioId: string }) {
   const produtoId = searchParams.get('produto');
   const [cenario, setCenario] = useState<Cenario | null>(null);
   const [produto, setProduto] = useState<Produto | null>(null);
+  const [habilitado, setHabilitado] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       obterCenario(cenarioId),
       produtoId ? obterProduto(produtoId) : Promise.resolve(null),
-    ]).then(([c, p]) => {
+      obterHabilitacao(VENDEDOR_ATUAL_ID),
+    ]).then(([c, p, h]) => {
       setCenario(c);
       setProduto(p);
+      setHabilitado(
+        h.cenarioIds.includes(cenarioId) && (!p || h.produtoIds.includes(p.id)),
+      );
       setLoading(false);
     });
   }, [cenarioId, produtoId]);
 
-  // Fecha o loop: transforma o veredito em avaliação, persiste (marcando a
+  // Fecha o loop: transforma o desempenho em avaliação, persiste (marcando a
   // atribuição como concluída) e leva para a tela de resultado.
-  const handleFinish = async (veredito: Veredito | null) => {
-    if (!veredito) {
+  const handleFinish = async (analise: AnaliseSessao | null) => {
+    if (!analise) {
       router.push('/vendedor');
       return;
     }
-    const avaliacao = avaliacaoDoVeredito({
-      veredito,
+    const avaliacao = avaliacaoDaAnalise({
+      analise,
       cenarioId,
       vendedorId: VENDEDOR_ATUAL_ID,
       atribuicaoId,
@@ -80,6 +86,20 @@ function SimulacaoInner({ cenarioId }: { cenarioId: string }) {
     return (
       <EmptyState
         title="Cenário não encontrado"
+        action={
+          <Button variant="outline" onClick={() => router.push('/vendedor')}>
+            Voltar
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (!habilitado) {
+    return (
+      <EmptyState
+        title="Simulação não habilitada"
+        description="O gestor não liberou este cenário ou este produto para você."
         action={
           <Button variant="outline" onClick={() => router.push('/vendedor')}>
             Voltar

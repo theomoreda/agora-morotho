@@ -33,7 +33,7 @@ export function QuickstartConversationLayout({
             className="h-10 w-10 shrink-0 object-contain"
           />
           <div className="flex min-w-0 flex-col justify-center gap-1">
-            <span className="truncate text-lg font-semibold leading-none tracking-[-0.025em] text-foreground">
+            <span className="truncate font-display text-xl font-semibold leading-none tracking-[-0.025em] text-foreground">
               Agora Conversational AI
             </span>
             {pipelineMetrics}

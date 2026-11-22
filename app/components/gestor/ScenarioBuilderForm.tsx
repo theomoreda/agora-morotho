@@ -22,7 +22,7 @@ type ScenarioBuilderFormProps = {
 
 const labelCls = 'mb-1.5 block text-xs font-medium text-muted-foreground';
 const fieldCls =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-primary';
+  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary';
 
 export function ScenarioBuilderForm({
   produtos,
@@ -69,8 +69,8 @@ export function ScenarioBuilderForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Card className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Card className="space-y-5">
         <div>
           <label className={labelCls} htmlFor="titulo">
             Título do cenário
@@ -171,9 +171,9 @@ export function ScenarioBuilderForm({
         </div>
       </Card>
 
-      <Card className="space-y-3">
+      <Card className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">Objeções</h3>
+          <h3 className="type-card-title">Objeções</h3>
           <Button
             type="button"
             variant="outline"
@@ -210,7 +210,7 @@ export function ScenarioBuilderForm({
       <div className="flex items-center gap-3">
         <Button type="submit">Salvar cenário</Button>
         {salvo && (
-          <span className="text-xs text-emerald-400">
+          <span className="text-xs text-success">
             Cenário montado (demo — sem persistência).
           </span>
         )}

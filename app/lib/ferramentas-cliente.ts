@@ -3,18 +3,18 @@
  *
  * Mesmo padrão do `getHora`: uma função registrada no agente que ele chama no
  * meio da fala. Aqui, `consultarPolitica` guarda o plano (R$ 79,90, desconto
- * máximo 10%, fidelidade 12 meses) e responde quando o vendedor oferece algo
- * fora da regra — o cliente então contesta citando o número correto.
+ * máximo 10%, fidelidade 12 meses). O cliente usa a resposta só para decidir
+ * se aceita ou quanto pede na contraproposta; nunca revela a regra.
  *
  * A execução acontece no servidor (dentro do nosso Custom LLM). Se qualquer
- * coisa falhar, devolvemos a frase pronta de fallback e instruímos o cliente a
- * recusar mesmo assim, para a conversa não travar.
+ * coisa falhar, devolvemos a instrução de fallback para a conversa não travar.
  */
 import { jsonSchema, tool } from 'ai';
 import {
   consultarPolitica,
+  DESCRICAO_CONSULTAR_POLITICA,
   FRASE_FALLBACK_POLITICA,
-  PLANO,
+  instrucaoPolitica,
 } from '@/lib/plano';
 
 /** Entrada da ferramenta: o desconto, em %, que o vendedor ofereceu/pediu. */
@@ -26,10 +26,7 @@ export function ferramentasDoCliente() {
   return {
     consultarPolitica: tool({
       description:
-        'Consulta a política comercial do plano (preço, desconto máximo e ' +
-        'fidelidade). Use SEMPRE que o vendedor oferecer ou citar um desconto, ' +
-        'ou prometer uma condição comercial, para saber o que é permitido antes ' +
-        'de responder.',
+        DESCRICAO_CONSULTAR_POLITICA,
       inputSchema: jsonSchema<ConsultarPoliticaInput>({
         type: 'object',
         properties: {
@@ -51,17 +48,8 @@ export function ferramentasDoCliente() {
               ? descontoOferecidoPct
               : null;
           const r = consultarPolitica(pct);
-          return {
-            plano: PLANO.nome,
-            precoMensal: r.precoMensal,
-            descontoMaximoPct: r.descontoMaximoPct,
-            fidelidadeMeses: r.fidelidadeMeses,
-            permitido: r.permitido,
-            // Instrução explícita para o cliente contestar com o número certo.
-            instrucao: r.permitido
-              ? `${r.resumo} Você pode aceitar essa condição.`
-              : `${r.resumo} Recuse o desconto oferecido e cite que o máximo é ${r.descontoMaximoPct}%.`,
-          };
+          // Só a instrução: "permitido: false" e o teto fazem o cliente recusar a oferta.
+          return { instrucao: instrucaoPolitica(pct, r) };
         } catch (erro) {
           console.error('[consultarPolitica] falha, usando fallback:', erro);
           // Fallback: a regra caiu, mas o cliente não pode travar nem aceitar.

@@ -39,22 +39,22 @@ export function AssignmentCard({
 
   return (
     <Card className="flex h-full flex-col">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white">{cenario.titulo}</h3>
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <h3 className="type-card-title">{cenario.titulo}</h3>
         <DifficultyTag dificuldade={cenario.dificuldade} />
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         {PERFIL_CLIENTE_LABEL[cenario.perfilCliente]}
       </p>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between">
         <StatusBadge status={atribuicao.status} />
         <span className="text-xs text-muted-foreground">
           Prazo: {new Date(atribuicao.prazo).toLocaleDateString('pt-BR')}
         </span>
       </div>
 
-      <div className="mt-4 flex-1" />
+      <div className="mt-6 flex-1" />
 
       {concluida && atribuicao.avaliacaoId ? (
         <Button asChild variant="outline" className="w-full gap-2">

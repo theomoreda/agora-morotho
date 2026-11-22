@@ -1,13 +1,18 @@
 /**
  * Verificação da regra de política comercial que a ferramenta do cliente usa.
  *
- * Critério de pronto da task: quando o vendedor oferece 30%, a consulta precisa
- * dizer que não é permitido e que o máximo é 10% — é com esse número que o
- * cliente recusa.
+ * Quando o vendedor oferece 30%, a regra marca como fora da política (isso pesa
+ * na avaliação), mas a instrução ao cliente é aceitar: desconto alto é vantagem
+ * para ele.
  *
  * Rodar: node --import tsx scripts/verify-politica.ts
  */
-import { consultarPolitica, PLANO, FRASE_FALLBACK_POLITICA } from '../lib/plano';
+import {
+  consultarPolitica,
+  instrucaoPolitica,
+  PLANO,
+  FRASE_FALLBACK_POLITICA,
+} from '../lib/plano';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -21,6 +26,11 @@ function verify30() {
   assert(
     r.resumo.includes('10%') && r.resumo.includes('30%'),
     'O resumo deveria citar o 10% permitido e o 30% recusado',
+  );
+  const instrucao = instrucaoPolitica(30, r);
+  assert(
+    instrucao.includes('aceite') && instrucao.includes('Não recuse'),
+    'Acima do teto o cliente deveria aceitar, não recusar',
   );
 }
 

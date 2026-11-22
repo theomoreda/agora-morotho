@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { PageHeader, SectionHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { AssignmentCard } from '@/components/vendedor/AssignmentCard';
 import {
@@ -9,6 +9,7 @@ import {
   listarCenarios,
   listarMateriais,
   listarProdutos,
+  obterHabilitacao,
 } from '@/lib/data-provider';
 import { VENDEDOR_ATUAL_ID } from '@/lib/sessao-demo';
 import type { Atribuicao, Cenario, Material, Produto } from '@/lib/types';
@@ -16,6 +17,7 @@ import type { Atribuicao, Cenario, Material, Produto } from '@/lib/types';
 export default function VendedorHome() {
   const [atribuicoes, setAtribuicoes] = useState<Atribuicao[]>([]);
   const [cenarios, setCenarios] = useState<Cenario[]>([]);
+  const [cenariosHabilitados, setCenariosHabilitados] = useState<string[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [materiais, setMateriais] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,16 +28,23 @@ export default function VendedorHome() {
       listarCenarios(),
       listarProdutos(),
       listarMateriais(),
-    ]).then(([at, c, p, m]) => {
+      obterHabilitacao(VENDEDOR_ATUAL_ID),
+    ]).then(([at, c, p, m, h]) => {
       setAtribuicoes(at);
       setCenarios(c);
-      setProdutos(p);
+      setCenariosHabilitados(h.cenarioIds);
+      setProdutos(p.filter((prod) => h.produtoIds.includes(prod.id)));
       setMateriais(m);
       setLoading(false);
     });
   }, []);
 
-  const pendentes = atribuicoes.filter((a) => a.status !== 'concluida');
+  const pendentes =
+    produtos.length === 0
+      ? []
+      : atribuicoes.filter(
+          (a) => a.status !== 'concluida' && cenariosHabilitados.includes(a.cenarioId),
+        );
   const concluidas = atribuicoes.filter((a) => a.status === 'concluida');
 
   const cenarioDe = (id: string) => cenarios.find((c) => c.id === id);
@@ -50,13 +59,20 @@ export default function VendedorHome() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
-        <div className="space-y-8">
+        <div className="page-sections">
           <section>
-            <h3 className="mb-3 text-sm font-semibold text-white">A fazer</h3>
+            <SectionHeader title="A fazer" />
             {pendentes.length === 0 ? (
-              <EmptyState title="Tudo em dia!" description="Nenhuma simulação pendente." />
+              <EmptyState
+                title="Tudo em dia!"
+                description={
+                  produtos.length === 0
+                    ? 'Nenhum produto habilitado pelo gestor.'
+                    : 'Nenhuma simulação pendente.'
+                }
+              />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 {pendentes.map((at) => {
                   const cenario = cenarioDe(at.cenarioId);
                   if (!cenario) return null;
@@ -76,10 +92,8 @@ export default function VendedorHome() {
 
           {concluidas.length > 0 && (
             <section>
-              <h3 className="mb-3 text-sm font-semibold text-white">
-                Concluídas
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <SectionHeader title="Concluídas" />
+              <div className="grid gap-5 sm:grid-cols-2">
                 {concluidas.map((at) => {
                   const cenario = cenarioDe(at.cenarioId);
                   if (!cenario) return null;

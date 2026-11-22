@@ -14,7 +14,7 @@ type RubricEditorProps = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-white outline-none focus:border-primary';
+  'w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary';
 
 /**
  * Lista de critérios com pesos. No modo editável, permite renomear, descrever,
@@ -74,7 +74,7 @@ export function RubricEditor({ criterios, readOnly, onSalvar }: RubricEditorProp
             className="flex items-start justify-between gap-4 border-b border-border pb-3 last:border-0 last:pb-0"
           >
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white">{c.nome}</p>
+              <p className="text-sm font-medium text-foreground">{c.nome}</p>
               <p className="text-xs text-muted-foreground">{c.descricao}</p>
             </div>
             <span className="shrink-0 rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
@@ -139,7 +139,7 @@ export function RubricEditor({ criterios, readOnly, onSalvar }: RubricEditorProp
         <span
           className={cn(
             'text-sm font-semibold',
-            soma === 100 ? 'text-emerald-400' : 'text-rose-400',
+            soma === 100 ? 'text-success' : 'text-rose-400',
           )}
         >
           {soma}%
@@ -148,7 +148,7 @@ export function RubricEditor({ criterios, readOnly, onSalvar }: RubricEditorProp
 
       {onSalvar && (
         <div className="flex items-center justify-end gap-3 pt-1">
-          {salvo && <span className="text-xs text-emerald-400">Rubrica salva</span>}
+          {salvo && <span className="text-xs text-success">Rubrica salva</span>}
           {!nomesValidos && (
             <span className="text-xs text-rose-400">Todo critério precisa de nome</span>
           )}

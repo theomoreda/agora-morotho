@@ -19,7 +19,7 @@ export function VendedorRow({ vendedor, atribuicoes }: VendedorRowProps) {
       className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-card"
     >
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-white">
+        <p className="truncate text-sm font-medium text-foreground">
           {vendedor.nome}
         </p>
         <p className="truncate text-xs text-muted-foreground">

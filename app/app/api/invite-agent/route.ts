@@ -53,13 +53,15 @@ function buildVoice() {
  * túnel HTTPS público), a Agora chama o nosso Custom LLM, que registra e executa
  * `consultarPolitica`. É o caminho que faz o cliente contestar o desconto.
  */
-function buildBrain(greeting: string) {
+function buildBrain(greeting: string, produtoId?: string) {
   const customLlmUrl = process.env.NEXT_LLM_URL || process.env.PROSA_LLM_URL;
-  const ferramenta = ferramentaPoliticaAgora();
+  const ferramenta = ferramentaPoliticaAgora(produtoId);
   const params = {
     max_tokens: MAX_TOKENS_FALA,
     temperature: 0.8,
     top_p: 0.95,
+    frequency_penalty: 0.6,
+    presence_penalty: 0.4,
   };
 
   if (customLlmUrl) {
@@ -179,7 +181,7 @@ export async function POST(request: NextRequest) {
           punctuation: true,
         }),
       )
-      .withLlm(buildBrain(greeting))
+      .withLlm(buildBrain(greeting, produto?.id))
       .withTts(buildVoice());
 
     // remoteUids restricts the agent to only process audio from this user

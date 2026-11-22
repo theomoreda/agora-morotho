@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { FileText, Paperclip, Plus, Trash2 } from 'lucide-react';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { PageHeader, SectionHeader } from '@/components/shared/PageHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { KnowledgeUploader, TIPO_LABEL } from '@/components/gestor/KnowledgeUploader';
@@ -72,7 +72,7 @@ export default function BibliotecaPage() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
-        <div className="space-y-6">
+        <div className="page-sections">
           {formulario === 'material' && (
             <KnowledgeUploader
               produtos={produtos}
@@ -89,15 +89,15 @@ export default function BibliotecaPage() {
           )}
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-white">Produtos</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <SectionHeader title="Produtos" />
+            <div className="grid gap-5 sm:grid-cols-2">
               {produtos.map((p) => (
                 <Card key={p.id}>
-                  <h3 className="text-sm font-semibold text-white">{p.nome}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <h3 className="type-card-title">{p.nome}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {p.descricao}
                   </p>
-                  <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-4 text-xs text-muted-foreground">
                     {p.materiais.length} materiais vinculados
                   </p>
                 </Card>
@@ -106,18 +106,16 @@ export default function BibliotecaPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-white">Materiais</h2>
-            <div className="space-y-3">
+            <SectionHeader title="Materiais" />
+            <div className="space-y-4">
               {materiais.map((m) => (
-                <Card key={m.id} className="flex items-start gap-3">
+                <Card key={m.id} className="flex items-start gap-4">
                   <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
                     <FileText className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-medium text-white">
-                        {m.titulo}
-                      </h3>
+                      <h3 className="type-card-title">{m.titulo}</h3>
                       <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
                         {TIPO_LABEL[m.tipo]}
                       </span>
@@ -128,7 +126,7 @@ export default function BibliotecaPage() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                       {m.conteudo}
                     </p>
                   </div>

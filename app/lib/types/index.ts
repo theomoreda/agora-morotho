@@ -57,11 +57,20 @@ export interface Material {
   arquivo?: string;
 }
 
+/** Regra comercial que o vendedor precisa respeitar. Fica oculta para o cliente. */
+export interface PoliticaComercial {
+  precoMensal: number; // R$
+  descontoMaximoPct: number; // %
+  fidelidadeMeses: number;
+}
+
 export interface Produto {
   id: string;
   nome: string;
   descricao: string;
   materiais: string[]; // ids de Material
+  /** Sem isto, vale o plano padrão de `lib/plano.ts`. */
+  politica?: PoliticaComercial;
 }
 
 // ── Critérios de avaliação (rubrica) ────────────────────────────────────────
@@ -99,6 +108,13 @@ export interface Vendedor {
   email: string;
   /** Média geral das avaliações concluídas (0-100), ou null se nenhuma. */
   mediaGeral: number | null;
+}
+
+/** O que o gestor liberou para o vendedor. Sem registro, tudo fica liberado. */
+export interface Habilitacao {
+  vendedorId: string;
+  cenarioIds: string[];
+  produtoIds: string[];
 }
 
 export type StatusAtribuicao =
@@ -148,6 +164,50 @@ export interface Avaliacao {
   errosIdentificados: string[];
   /** Pontos de melhoria priorizados. */
   pontosDeMelhoria: string[];
+  /** Desempenho da simulação de voz, quando a avaliação veio de uma ligação. */
+  analise?: AnaliseSessao;
+}
+
+// ── Desempenho da sessão de voz ─────────────────────────────────────────────
+
+export type Desfecho = 'fechou' | 'adiou' | 'recusou' | 'sem_decisao';
+
+export const DESFECHO_LABEL: Record<Desfecho, string> = {
+  fechou: 'Venda fechada',
+  adiou: 'Cliente adiou a decisão',
+  recusou: 'Cliente recusou',
+  sem_decisao: 'Sem decisão',
+};
+
+export interface CriterioSessao {
+  id: string;
+  nome: string;
+  /** null quando a conversa não traz base para avaliar; fica fora da nota. */
+  atendido: boolean | null;
+  justificativa: string;
+  /** Fala da conversa que sustenta o resultado. */
+  evidencia: string | null;
+}
+
+export interface MetricaSessao {
+  nome: string;
+  valor: string;
+  detalhe: string;
+}
+
+export interface AnaliseSessao {
+  desfecho: Desfecho;
+  /** Fala do cliente que marcou o desfecho. */
+  fraseDesfecho: string | null;
+  /** Percentual dos critérios avaliáveis que foram atendidos (0-100). */
+  nota: number;
+  /** false quando a conversa não tem falas dos dois lados. */
+  avaliavel: boolean;
+  criterios: CriterioSessao[];
+  metricas: MetricaSessao[];
+  duracaoSeg: number;
+  /** Conversa da qual tudo acima foi extraído. */
+  transcricao: Turno[];
 }
 
 // ── Perfil de usuário (seleção mockada) ─────────────────────────────────────

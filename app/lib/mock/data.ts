@@ -112,6 +112,7 @@ export const PRODUTOS: Produto[] = [
     descricao:
       'Plano de operadora com telefonia móvel, internet banda larga, TV por assinatura e streaming.',
     materiais: ['mat-catalogo-combo', 'mat-politica-combo', 'mat-processo'],
+    politica: { precoMensal: 249.9, descontoMaximoPct: 10, fidelidadeMeses: 12 },
   },
 ];
 

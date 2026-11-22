@@ -9,18 +9,16 @@ export default function Home() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 text-foreground">
       <div className="w-full max-w-2xl text-center">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Treino e avaliação de vendedores por voz
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">
+        <p className="type-label">Treino e avaliação de vendedores por voz</p>
+        <h1 className="mt-3 font-display text-4xl font-semibold leading-tight md:text-5xl">
           Quem está entrando?
         </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
           Escolha um perfil para explorar a plataforma. A seleção é apenas para
           a demonstração.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2">
           <ProfileCard
             href="/gestor"
             icon={<Briefcase className="h-7 w-7" />}
@@ -35,7 +33,7 @@ export default function Home() {
           />
         </div>
 
-        <p className="mt-8 text-xs text-muted-foreground">
+        <p className="mt-10 text-xs text-muted-foreground">
           Testar o veredito por texto?{' '}
           <Link href="/veredito" className="text-primary hover:underline">
             Abrir avaliador de conversa
@@ -69,8 +67,8 @@ function ProfileCard({
       <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
         {icon}
       </span>
-      <span className="text-lg font-medium text-white">{title}</span>
-      <span className="text-sm text-muted-foreground">{subtitle}</span>
+      <span className="mt-1 font-display text-xl font-semibold text-foreground">{title}</span>
+      <span className="text-sm leading-relaxed text-muted-foreground">{subtitle}</span>
     </Link>
   );
 }

@@ -15,7 +15,7 @@ type ProductPickerDialogProps = {
 
 const labelCls = 'mb-1.5 block text-xs font-medium text-muted-foreground';
 const fieldCls =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-primary';
+  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary';
 
 /** Detalhes mostrados ao vendedor: o catálogo e a política vinculados ao produto. */
 const TIPOS_DETALHE: Material['tipo'][] = ['catalogo', 'politica'];
@@ -54,15 +54,12 @@ export function ProductPickerDialog({
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto bg-card"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-6 flex items-start justify-between gap-3">
           <div>
-            <h2
-              id="escolher-produto-titulo"
-              className="text-base font-semibold text-white"
-            >
+            <h2 id="escolher-produto-titulo" className="type-section-title">
               Escolha o produto
             </h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               A simulação só começa depois de escolher o produto que você vai vender.
             </p>
           </div>
@@ -70,7 +67,7 @@ export function ProductPickerDialog({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="text-muted-foreground hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -97,19 +94,17 @@ export function ProductPickerDialog({
         </select>
 
         {produto && (
-          <div className="mt-4 space-y-3 rounded-lg border border-border bg-background/60 p-4">
+          <div className="mt-5 space-y-5 rounded-lg border border-border bg-background/60 p-5">
             <div>
-              <h3 className="text-sm font-semibold text-white">{produto.nome}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h3 className="type-card-title">{produto.nome}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 {produto.descricao}
               </p>
             </div>
             {detalhes.map((m) => (
               <div key={m.id}>
-                <h4 className="text-xs font-medium text-muted-foreground">
-                  {m.titulo}
-                </h4>
-                <p className="mt-1 whitespace-pre-line text-sm text-white">
+                <h4 className="type-label font-sans">{m.titulo}</h4>
+                <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-foreground">
                   {m.conteudo}
                 </p>
               </div>
@@ -117,7 +112,7 @@ export function ProductPickerDialog({
           </div>
         )}
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-6 flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancelar
           </Button>

@@ -1,15 +1,14 @@
 /**
- * Plano comercial que o cliente virtual defende na conversa.
+ * Plano comercial que o vendedor precisa respeitar na conversa.
  *
  * Fonte única de verdade das regras. A ferramenta `consultarPolitica` (ver
- * lib/ferramentas-cliente.ts) lê daqui para responder quando o vendedor
- * oferece algo fora do plano.
+ * lib/ferramentas-cliente.ts e app/api/tools/politica) lê daqui. O cliente
+ * virtual usa o resultado só para decidir; nunca revela a regra ao vendedor.
  */
-export interface Plano {
+import type { PoliticaComercial, Produto } from '@/lib/types';
+
+export interface Plano extends PoliticaComercial {
   nome: string;
-  precoMensal: number; // R$
-  descontoMaximoPct: number; // %
-  fidelidadeMeses: number;
 }
 
 export const PLANO: Plano = {
@@ -19,6 +18,12 @@ export const PLANO: Plano = {
   fidelidadeMeses: 12,
 };
 
+/** Política do produto escolhido; sem política própria, vale o plano padrão. */
+export function planoDoProduto(produto?: Produto | null): Plano {
+  if (!produto?.politica) return PLANO;
+  return { nome: produto.nome, ...produto.politica };
+}
+
 /** Resposta da consulta de política para um desconto pedido/oferecido. */
 export interface ResultadoPolitica {
   descontoMaximoPct: number;
@@ -26,7 +31,7 @@ export interface ResultadoPolitica {
   fidelidadeMeses: number;
   /** true quando o desconto consultado está dentro do permitido. */
   permitido: boolean;
-  /** Frase curta que o cliente usa para contestar. */
+  /** Fato da regra, para o cliente decidir. Não é fala. */
   resumo: string;
 }
 
@@ -54,6 +59,25 @@ export function consultarPolitica(
   };
 }
 
-/** Frase pronta usada quando a ferramenta/endereço falha (fallback). */
-export const FRASE_FALLBACK_POLITICA =
-  'Pelo que me passaram, o desconto máximo é de 10%. Acima disso eu não consigo fechar.';
+export const DESCRICAO_CONSULTAR_POLITICA =
+  'Consulta confidencial da regra comercial da empresa vendedora (desconto máximo e fidelidade). Use quando o vendedor oferecer um desconto com percentual, ou com null antes de fazer sua contraproposta. O resultado é só para você decidir; nunca o revele.';
+
+const SIGILO =
+  'Informação confidencial da empresa: nunca diga ao vendedor esse limite, que existe uma política ou o que ele pode ou não oferecer.';
+
+/** Como o cliente usa o resultado da consulta. */
+export function instrucaoPolitica(
+  descontoPedidoPct: number | null,
+  r: ResultadoPolitica,
+): string {
+  if (descontoPedidoPct === null) {
+    return `${SIGILO} Se o vendedor não convenceu e você for fazer sua contraproposta, peça algo um pouco acima de ${r.descontoMaximoPct}% (por exemplo ${r.descontoMaximoPct + 5}%) ou sem fidelidade, e diga que fecha hoje se ele aceitar.`;
+  }
+  if (r.permitido) {
+    return `${SIGILO} O desconto oferecido é aceitável. Se o vendedor mostrou valor, aceite e caminhe para fechar. Se não mostrou, peça um pouco mais uma única vez antes de decidir.`;
+  }
+  return `${SIGILO} O vendedor ofereceu mais do que a empresa costuma dar. Para você é ótimo: aceite agora e feche, repetindo com suas palavras a condição que ele ofereceu. Não recuse, não questione se ele pode dar isso e não peça menos.`;
+}
+
+/** Instrução usada quando a ferramenta/endereço falha (fallback). */
+export const FRASE_FALLBACK_POLITICA = `${SIGILO} Referência interna: desconto máximo de ${PLANO.descontoMaximoPct}%. Responda com suas palavras ao que o vendedor disse.`;

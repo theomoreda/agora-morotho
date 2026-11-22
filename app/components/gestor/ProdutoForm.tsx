@@ -42,8 +42,8 @@ export function ProdutoForm({ materiais, onSalvo, onCancelar }: ProdutoFormProps
   }
 
   return (
-    <Card className="space-y-4">
-      <h2 className="text-sm font-semibold text-white">Novo produto</h2>
+    <Card className="space-y-5">
+      <h2 className="type-section-title">Novo produto</h2>
 
       <input
         value={nome}
@@ -74,7 +74,7 @@ export function ProdutoForm({ materiais, onSalvo, onCancelar }: ProdutoFormProps
                   onChange={() => alternarMaterial(m.id)}
                   className="accent-primary"
                 />
-                <span className={cn(materialIds.includes(m.id) && 'text-white')}>{m.titulo}</span>
+                <span className={cn(materialIds.includes(m.id) && 'text-foreground')}>{m.titulo}</span>
               </label>
             ))}
           </div>

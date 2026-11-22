@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AgoraRTC, {
   useRTCClient,
   useLocalMicrophoneTrack,
@@ -48,6 +48,10 @@ import { messageListParaTurnos } from '@/lib/veredito-adapter';
 
 // Cap the displayed issues list to avoid overwhelming the UI during a cascade of errors.
 const MAX_CONNECTION_ISSUES = 6;
+
+// The transcript finishes before the TTS audio does; wait for the goodbye to play out.
+const ENCERRAR_APOS_DESPEDIDA_MS = 4500;
+const RE_DESPEDIDA = /\btchau\b/i;
 
 type AgoraRtcWithParameters = typeof AgoraRTC & {
   setParameter?: (key: string, value: unknown) => void;
@@ -465,10 +469,49 @@ export default function ConversationComponent({
 
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
+  const primeiraFalaEmRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (primeiraFalaEmRef.current === null && transcript.length > 0) {
+      primeiraFalaEmRef.current = Date.now();
+    }
+  }, [transcript.length]);
+
   const handleEndConversation = useCallback(async () => {
-    // Entrega os turnos atribuídos para o veredito pós-chamada.
-    onEndConversation(messageListParaTurnos(messageList, Number(agentUID)));
-  }, [onEndConversation, messageList, agentUID]);
+    // A fala cortada pelo encerramento também é parte da conversa.
+    const falas = currentInProgressMessage
+      ? [...messageList, currentInProgressMessage]
+      : messageList;
+    const duracaoSeg =
+      primeiraFalaEmRef.current === null
+        ? 0
+        : (Date.now() - primeiraFalaEmRef.current) / 1000;
+    onEndConversation(
+      messageListParaTurnos(falas, Number(agentUID)),
+      duracaoSeg,
+    );
+  }, [onEndConversation, messageList, currentInProgressMessage, agentUID]);
+
+  // O cliente virtual diz "tchau" só na fala da decisão; aí a ligação acaba.
+  const clienteEncerrou = useMemo(() => {
+    const ultimaDoCliente = [...messageList]
+      .reverse()
+      .find((m) => m.uid === Number(agentUID));
+    return !!ultimaDoCliente && RE_DESPEDIDA.test(ultimaDoCliente.text);
+  }, [messageList, agentUID]);
+
+  const encerrarRef = useRef(handleEndConversation);
+  useEffect(() => {
+    encerrarRef.current = handleEndConversation;
+  }, [handleEndConversation]);
+
+  useEffect(() => {
+    if (!clienteEncerrou) return;
+    const id = setTimeout(
+      () => encerrarRef.current(),
+      ENCERRAR_APOS_DESPEDIDA_MS,
+    );
+    return () => clearTimeout(id);
+  }, [clienteEncerrou]);
 
   return (
     <QuickstartConversationLayout
@@ -496,6 +539,11 @@ export default function ConversationComponent({
           aria-label="AI agent status visualization"
         >
           <AgentVisualizer state={visualizerState} size="lg" />
+          {clienteEncerrou && (
+            <p className="absolute bottom-4 rounded-full border border-border bg-card/90 px-4 py-2 text-sm text-foreground">
+              O cliente encerrou a ligação. Preparando seu desempenho…
+            </p>
+          )}
           {remoteUsers.map((user) => (
             <div key={user.uid} className="hidden">
               <RemoteUser user={user} />
