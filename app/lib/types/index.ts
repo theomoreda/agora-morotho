@@ -147,3 +147,30 @@ export interface Avaliacao {
 // ── Perfil de usuário (seleção mockada) ─────────────────────────────────────
 
 export type Perfil = 'gestor' | 'vendedor';
+
+// ── Veredito pós-chamada (apto / não apto) ──────────────────────────────────
+
+/** Os dois únicos critérios do veredito. */
+export type CriterioVeredito = 'condicao_comercial' | 'segurou_objecao';
+
+export const CRITERIO_VEREDITO_LABEL: Record<CriterioVeredito, string> = {
+  condicao_comercial: 'A condição comercial bate com o plano',
+  segurou_objecao: 'Segurou a objeção em vez de ceder',
+};
+
+/** Fala atribuída a um dos lados da conversa. */
+export type Falante = 'vendedor' | 'cliente';
+
+export interface Turno {
+  falante: Falante;
+  texto: string;
+}
+
+/** Resultado do veredito entregue para a tela. */
+export interface Veredito {
+  apto: boolean;
+  /** Critério que reprovou; null quando apto. */
+  criterioFalho: CriterioVeredito | null;
+  /** Frase do vendedor que causou a reprovação; null quando apto. */
+  frase: string | null;
+}

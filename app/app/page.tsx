@@ -34,6 +34,13 @@ export default function Home() {
             subtitle="Pratica conversas por voz e recebe avaliação."
           />
         </div>
+
+        <p className="mt-8 text-xs text-muted-foreground">
+          Testar o veredito por texto?{' '}
+          <Link href="/veredito" className="text-primary hover:underline">
+            Abrir avaliador de conversa
+          </Link>
+        </p>
       </div>
 
       <footer className="pointer-events-none fixed bottom-4 right-4 text-xs text-muted-foreground">

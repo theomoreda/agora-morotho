@@ -12,7 +12,10 @@ import type {
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { PreCallScenarioCard } from './PreCallScenarioCard';
-import type { Cenario } from '@/lib/types';
+import { VerdictCard } from '@/components/veredito/VerdictCard';
+import { Button } from '@/components/ui/button';
+import { avaliarTurnos } from '@/lib/veredito';
+import type { Cenario, Turno, Veredito } from '@/lib/types';
 
 // Dynamically import the ConversationComponent with ssr disabled
 const ConversationComponent = dynamic(
@@ -81,6 +84,8 @@ export default function VoiceSimulation({
   const [agoraData, setAgoraData] = useState<AgoraTokenData | null>(null);
   const [rtmClient, setRtmClient] = useState<RTMClient | null>(null);
   const [agentJoinError, setAgentJoinError] = useState(false);
+  // Veredito pós-chamada, calculado quando a conversa encerra.
+  const [veredito, setVeredito] = useState<Veredito | null>(null);
 
   const handleStartConversation = async () => {
     setIsLoading(true);
@@ -180,7 +185,10 @@ export default function VoiceSimulation({
     [agoraData],
   );
 
-  const handleEndConversation = async () => {
+  const handleEndConversation = async (turnos: Turno[]) => {
+    // Veredito pós-chamada a partir dos turnos atribuídos da transcrição.
+    setVeredito(avaliarTurnos(turnos));
+
     // Stop the AI agent
     if (agoraData?.agentId) {
       try {
@@ -201,7 +209,7 @@ export default function VoiceSimulation({
     rtmClient?.logout().catch((err) => console.error('RTM logout error:', err));
     setRtmClient(null);
     setShowConversation(false);
-    onFinish?.();
+    // Não navega embora ainda: mostra o veredito e deixa o usuário sair depois.
   };
 
   return (
@@ -220,7 +228,17 @@ export default function VoiceSimulation({
               : 'w-full max-w-none items-center justify-center px-4 text-center'
           }`}
         >
-          {!showConversation ? (
+          {veredito && !showConversation ? (
+            <div className="mx-auto w-[min(92vw,30rem)] space-y-4 text-left">
+              <h2 className="text-lg font-semibold text-white">
+                Veredito da simulação
+              </h2>
+              <VerdictCard veredito={veredito} />
+              <Button className="w-full" onClick={() => onFinish?.()}>
+                Concluir
+              </Button>
+            </div>
+          ) : !showConversation ? (
             <PreCallScenarioCard
               cenario={cenario}
               isLoading={isLoading}

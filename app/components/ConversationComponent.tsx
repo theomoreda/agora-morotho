@@ -44,6 +44,7 @@ import {
 } from './QuickstartPipelineMetrics';
 import { QuickstartTranscriptPanel } from './QuickstartTranscriptPanel';
 import type { ConversationComponentProps } from '@/types/conversation';
+import { messageListParaTurnos } from '@/lib/veredito-adapter';
 
 // Cap the displayed issues list to avoid overwhelming the UI during a cascade of errors.
 const MAX_CONNECTION_ISSUES = 6;
@@ -465,8 +466,9 @@ export default function ConversationComponent({
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
   const handleEndConversation = useCallback(async () => {
-    onEndConversation();
-  }, [onEndConversation]);
+    // Entrega os turnos atribuídos para o veredito pós-chamada.
+    onEndConversation(messageListParaTurnos(messageList, Number(agentUID)));
+  }, [onEndConversation, messageList, agentUID]);
 
   return (
     <QuickstartConversationLayout
