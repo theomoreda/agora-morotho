@@ -1,16 +1,15 @@
 /**
- * Custom LLM (opcional) que a Agora pode chamar durante a conversa.
+ * Custom LLM do cliente virtual.
  *
- * Endpoint OpenAI-compatible baseado no quickstart oficial. Só é usado quando
- * o agente é configurado com `llm.url` apontando para cá (NEXT_LLM_URL +
- * NEXT_LLM_API_KEY). Por padrão o agente usa o LLM gerenciado da Agora e esta
- * rota fica inativa.
+ * Endpoint OpenAI-compatible que a Agora chama durante a conversa. Registra e
+ * executa a ferramenta `consultarPolitica` (function calling): quando o
+ * vendedor oferece um desconto, o cliente consulta o plano e contesta com o
+ * número permitido.
+ *
+ * Só é usado quando o agente é iniciado com `llm.url` apontando para cá
+ * (NEXT_LLM_URL definido no invite-agent). Sem isso, o agente usa o LLM
+ * gerenciado da Agora e esta rota fica inativa.
  */
-import { streamText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createChatCompletionsHandler } from '@/lib/chat-completions';
+import { clienteChatCompletions } from '@/lib/cliente-chat-completions';
 
-export const POST = createChatCompletionsHandler({
-  createOpenAIClient: createOpenAI,
-  streamTextImpl: streamText,
-});
+export const POST = clienteChatCompletions;

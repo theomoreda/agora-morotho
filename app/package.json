@@ -14,8 +14,9 @@
     "lint": "eslint .",
     "verify:api": "node --import tsx scripts/verify-api-contracts.ts",
     "verify:veredito": "node --import tsx scripts/verify-veredito.ts",
+    "verify:politica": "node --import tsx scripts/verify-politica.ts",
     "typecheck": "tsc --noEmit",
-    "verify": "pnpm run doctor && pnpm run lint && pnpm run typecheck && pnpm run verify:api && pnpm run verify:veredito && pnpm run build"
+    "verify": "pnpm run doctor && pnpm run lint && pnpm run typecheck && pnpm run verify:api && pnpm run verify:veredito && pnpm run verify:politica && pnpm run build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.39",

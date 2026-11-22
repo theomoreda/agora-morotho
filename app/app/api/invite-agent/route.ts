@@ -58,6 +58,48 @@ function buildVoice() {
   });
 }
 
+/**
+ * Cérebro do cliente virtual.
+ *
+ * Padrão: LLM gerenciado da Agora (gpt-4o-mini) — sem chave, já conversa, mas
+ * NÃO executa a ferramenta de política (ela vive no nosso Custom LLM).
+ *
+ * Com NEXT_LLM_URL definido (o /api/chat/completions deste app exposto por um
+ * túnel HTTPS público), a Agora chama o nosso Custom LLM, que registra e executa
+ * `consultarPolitica`. É o caminho que faz o cliente contestar o desconto.
+ */
+function buildBrain(greeting: string) {
+  const customLlmUrl = process.env.NEXT_LLM_URL;
+
+  if (customLlmUrl) {
+    return new OpenAI({
+      apiKey: requireEnv('NEXT_LLM_API_KEY'),
+      url: customLlmUrl,
+      model: process.env.NEXT_LLM_MODEL ?? 'gpt-4o-mini',
+      greetingMessage: greeting,
+      failureMessage: MENSAGEM_FALHA_CLIENTE,
+      maxHistory: 15,
+      params: {
+        max_tokens: 1024,
+        temperature: 0.8,
+        top_p: 0.95,
+      },
+    });
+  }
+
+  return new OpenAI({
+    model: 'gpt-4o-mini',
+    greetingMessage: greeting,
+    failureMessage: MENSAGEM_FALHA_CLIENTE,
+    maxHistory: 15,
+    params: {
+      max_tokens: 1024,
+      temperature: 0.8,
+      top_p: 0.95,
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     // --- 1. Parse request ---
@@ -141,19 +183,7 @@ export async function POST(request: NextRequest) {
           punctuation: true,
         }),
       )
-      .withLlm(
-        new OpenAI({
-          model: 'gpt-4o-mini',
-          greetingMessage: greeting,
-          failureMessage: MENSAGEM_FALHA_CLIENTE,
-          maxHistory: 15,
-          params: {
-            max_tokens: 1024,
-            temperature: 0.8,
-            top_p: 0.95,
-          },
-        }),
-      )
+      .withLlm(buildBrain(greeting))
       .withTts(buildVoice());
 
     // remoteUids restricts the agent to only process audio from this user

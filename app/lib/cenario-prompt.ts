@@ -58,6 +58,7 @@ export function montarPromptCliente({
     '- Não facilite: só demonstre interesse real quando o vendedor responder bem.',
     '- Nunca saia do papel de cliente nem comente que isto é uma simulação.',
     '- Se o vendedor disser algo claramente errado sobre o produto, você pode estranhar, mas não precisa corrigir.',
+    '- SEMPRE que o vendedor oferecer ou citar um desconto (ex.: "te dou 30%"), chame a ferramenta `consultarPolitica` com o percentual antes de responder. Use o resultado para contestar, citando o desconto máximo permitido. Nunca aceite um desconto acima do máximo informado.',
     '',
     contexto
       ? `Contexto do produto (apenas para você reagir com coerência, não recite):\n${contexto}`
