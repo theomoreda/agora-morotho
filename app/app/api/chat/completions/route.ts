@@ -1,10 +1,15 @@
 /**
- * Custom LLM que a Agora chama durante a conversa.
+ * Custom LLM do cliente virtual.
  *
- * ADAPTADO NO HACKATHON. O handler original do quickstart (um proxy SSE sem
- * ferramentas) está preservado em route.ts.orig-quickstart e continua em
- * lib/chat-completions.ts. O nosso acrescenta as brincadeiras do Prosa.
+ * Endpoint OpenAI-compatible que a Agora chama durante a conversa. Registra e
+ * executa a ferramenta `consultarPolitica` (function calling): quando o
+ * vendedor oferece um desconto, o cliente consulta o plano e contesta com o
+ * número permitido.
+ *
+ * Só é usado quando o agente é iniciado com `llm.url` apontando para cá
+ * (NEXT_LLM_URL definido no invite-agent). Sem isso, o agente usa o LLM
+ * gerenciado da Agora e esta rota fica inativa.
  */
-import { prosaChatCompletions } from '@/lib/prosa-chat-completions';
+import { clienteChatCompletions } from '@/lib/cliente-chat-completions';
 
-export const POST = prosaChatCompletions;
+export const POST = clienteChatCompletions;
