@@ -44,9 +44,6 @@ import {
 } from './QuickstartPipelineMetrics';
 import { QuickstartTranscriptPanel } from './QuickstartTranscriptPanel';
 import type { ConversationComponentProps } from '@/types/conversation';
-// FEITO NO HACKATHON
-import { useProsa } from '@/hooks/use-prosa';
-import { PALAVRAS_MEMORIA } from '@/lib/clara';
 
 // Cap the displayed issues list to avoid overwhelming the UI during a cascade of errors.
 const MAX_CONNECTION_ISSUES = 6;
@@ -95,7 +92,6 @@ function isRtmSalStatusPayload(value: unknown): value is RtmSalStatusPayload {
 
 export default function ConversationComponent({
   agoraData,
-  prosaSessaoId = null,
   rtmClient,
   onTokenWillExpire,
   onEndConversation,
@@ -379,19 +375,6 @@ export default function ConversationComponent({
     return getCurrentInProgressMessage(transcript);
   }, [transcript]);
 
-  // FEITO NO HACKATHON: liga esta conversa às medidas do Prosa.
-  //
-  // Gravação em captura própria (sem ANS/AGC) e transcrição por turno vão para
-  // o serviço de análise. Não tocamos no track da Agora — o AGENTS.md deste
-  // quickstart é explícito que o ciclo de vida do track é do hook.
-  const prosa = useProsa({
-    sessaoId: prosaSessaoId,
-    uidLocal: String(client.uid ?? agoraData.uid),
-    ativo: joinSuccess,
-    turnos: messageList,
-    palavrasMemoria: PALAVRAS_MEMORIA,
-  });
-
   // Publish local mic once the track exists; usePublish waits for RTC connection.
   usePublish([localMicrophoneTrack]);
 
@@ -482,20 +465,8 @@ export default function ConversationComponent({
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
   const handleEndConversation = useCallback(async () => {
-    // FEITO NO HACKATHON: antes de desligar, fecha a sessão do Prosa — é aqui
-    // que o áudio é enviado (medido e apagado no servidor) e o semáforo é
-    // calculado.
-    //
-    // De propósito, o resultado NÃO aparece para a pessoa idosa: mostrar um
-    // semáforo de saúde para ela seria assustador e não é o produto. Quem vê
-    // tendência é a família, no painel.
-    try {
-      await prosa.encerrar();
-    } catch (error) {
-      console.error('[prosa] falha ao encerrar a sessão:', error);
-    }
     onEndConversation();
-  }, [onEndConversation, prosa]);
+  }, [onEndConversation]);
 
   return (
     <QuickstartConversationLayout

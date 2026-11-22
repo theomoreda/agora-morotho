@@ -310,6 +310,29 @@ async function verifyInviteAgentValidation() {
   );
 }
 
+async function verifyInviteAgentInvalidCenario() {
+  const { POST: inviteAgent } = await import('../app/api/invite-agent/route');
+  const request = new NextRequest('http://localhost:3000/api/invite-agent', {
+    body: JSON.stringify({
+      requester_id: 'user-4321',
+      channel_name: 'test-channel',
+      cenario_id: 'nao-existe',
+    }),
+    method: 'POST',
+  });
+  const response = await inviteAgent(request);
+  const body = await getJson(response);
+
+  assert(
+    response.status === 400,
+    'POST /api/invite-agent should reject an unknown cenario_id',
+  );
+  assert(
+    body.error === 'cenario_id inválido ou não informado',
+    'POST /api/invite-agent should explain an invalid cenario_id',
+  );
+}
+
 async function verifyInviteAgentSuccess() {
   const { POST: inviteAgent } = await import('../app/api/invite-agent/route');
   const originalCreateSession = Agent.prototype.createSession;
@@ -335,6 +358,7 @@ async function verifyInviteAgentSuccess() {
       body: JSON.stringify({
         requester_id: 'user-4321',
         channel_name: 'test-channel',
+        cenario_id: 'cen-desconfiado',
       }),
       method: 'POST',
     });
@@ -452,6 +476,7 @@ async function main() {
   await verifyChatCompletionsInvalidJson();
   await verifyChatCompletionsSseDone();
   await verifyInviteAgentValidation();
+  await verifyInviteAgentInvalidCenario();
   await verifyInviteAgentSuccess();
   await verifyStopConversationValidation();
   await verifyStopConversationSuccess();

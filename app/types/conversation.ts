@@ -11,11 +11,10 @@ export interface ClientStartRequest {
   requester_id: string;
   channel_name: string;
   /**
-   * FEITO NO HACKATHON: id da sessão no serviço de análise do Prosa.
-   * Vai para a llm.url como `?sid=`, porque a requisição do Custom LLM não
-   * traz o canal — é o que amarra a chamada do LLM à conversa certa.
+   * Cenário de simulação que define a persona do cliente virtual.
+   * O servidor monta as instruções do agente a partir dele.
    */
-  prosa_sessao_id?: number | null;
+  cenario_id?: string | null;
 }
 
 export interface StopConversationRequest {
@@ -35,8 +34,6 @@ export interface AgoraRenewalTokens {
 
 export interface ConversationComponentProps {
   agoraData: AgoraTokenData;
-  /** FEITO NO HACKATHON: sessão aberta no serviço de análise do Prosa. */
-  prosaSessaoId?: number | null;
   rtmClient: RTMClient;
   onTokenWillExpire: (uid: string) => Promise<AgoraRenewalTokens>;
   onEndConversation: () => void;
