@@ -15,7 +15,7 @@ import { PreCallScenarioCard } from './PreCallScenarioCard';
 import { VerdictCard } from '@/components/veredito/VerdictCard';
 import { Button } from '@/components/ui/button';
 import { avaliarTurnos } from '@/lib/veredito';
-import type { Cenario, Turno, Veredito } from '@/lib/types';
+import type { Cenario, Produto, Turno, Veredito } from '@/lib/types';
 
 // Dynamically import the ConversationComponent with ssr disabled
 const ConversationComponent = dynamic(
@@ -58,6 +58,8 @@ const AgoraProvider = dynamic(
 
 type VoiceSimulationProps = {
   cenario: Cenario;
+  /** Produto escolhido pelo vendedor; substitui o produto do cenário. */
+  produto: Produto;
   /**
    * Chamado quando o vendedor conclui a tela de veredito. Recebe o veredito
    * calculado para que a página possa persistir a avaliação.
@@ -67,11 +69,12 @@ type VoiceSimulationProps = {
 
 /**
  * Simulação de voz: reusa o encanamento RTC/RTM/ConvoAI da Agora, parametrizado
- * pelo cenário. O `cenario.id` é enviado ao `invite-agent`, que monta a persona
- * do cliente virtual.
+ * pelo cenário. O `cenario.id` e o `produto.id` são enviados ao `invite-agent`,
+ * que monta a persona do cliente virtual.
  */
 export default function VoiceSimulation({
   cenario,
+  produto,
   onFinish,
 }: VoiceSimulationProps) {
   const [showConversation, setShowConversation] = useState(false);
@@ -115,6 +118,7 @@ export default function VoiceSimulation({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
             cenario_id: cenario.id,
+            produto_id: produto.id,
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -244,6 +248,7 @@ export default function VoiceSimulation({
           ) : !showConversation ? (
             <PreCallScenarioCard
               cenario={cenario}
+              produto={produto}
               isLoading={isLoading}
               error={error}
               onStartConversation={handleStartConversation}

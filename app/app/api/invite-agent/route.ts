@@ -1,3 +1,4 @@
+import '@/lib/corrigir-token-agora';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   AgoraClient,
@@ -6,7 +7,6 @@ import {
   DeepgramSTT,
   ExpiresIn,
   OpenAI,
-  OpenAITTS,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
@@ -17,6 +17,13 @@ import {
   MENSAGEM_FALHA_CLIENTE,
 } from '@/lib/cenario-prompt';
 import type { Material } from '@/lib/types';
+import {
+  ferramentaPoliticaAgora,
+  INTERRUPT_MS,
+  MAX_TOKENS_FALA,
+  silencioMs,
+  vozDoCliente,
+} from '@/lib/voz-cliente';
 
 // Pipeline de voz (base: quickstart agent-quickstart-nextjs).
 // Aqui o agente interpreta o CLIENTE virtual do cenário de treino, em pt-BR.
@@ -31,31 +38,9 @@ function requireEnv(name: string): string {
   return value;
 }
 
-/**
- * Voz do cliente virtual.
- *
- * Padrão: preset gerenciado da Agora (`tts-1`) — não precisa de chave de vendor.
- * Upgrade (BYOK): com NEXT_TTS_API_KEY definida, usa `gpt-4o-mini-tts`, que
- * aceita `instructions` e permite ajustar o tom da voz do cliente.
- */
+/** Voz Fish Audio. Chave e id só em PROSA_FISH_API_KEY e PROSA_FISH_VOICE_ID. */
 function buildVoice() {
-  const ttsApiKey = process.env.NEXT_TTS_API_KEY;
-
-  if (ttsApiKey) {
-    return new OpenAITTS({
-      apiKey: ttsApiKey,
-      baseUrl: process.env.NEXT_TTS_BASE_URL ?? 'https://api.openai.com/v1',
-      model: process.env.NEXT_TTS_MODEL ?? 'gpt-4o-mini-tts',
-      voice: process.env.NEXT_TTS_VOICE ?? 'alloy',
-      speed: 1.0,
-    });
-  }
-
-  return new OpenAITTS({
-    model: 'tts-1',
-    voice: process.env.NEXT_TTS_VOICE ?? 'alloy',
-    speed: 1.0,
-  });
+  return vozDoCliente();
 }
 
 /**
@@ -69,7 +54,13 @@ function buildVoice() {
  * `consultarPolitica`. É o caminho que faz o cliente contestar o desconto.
  */
 function buildBrain(greeting: string) {
-  const customLlmUrl = process.env.NEXT_LLM_URL;
+  const customLlmUrl = process.env.NEXT_LLM_URL || process.env.PROSA_LLM_URL;
+  const ferramenta = ferramentaPoliticaAgora();
+  const params = {
+    max_tokens: MAX_TOKENS_FALA,
+    temperature: 0.8,
+    top_p: 0.95,
+  };
 
   if (customLlmUrl) {
     return new OpenAI({
@@ -79,12 +70,14 @@ function buildBrain(greeting: string) {
       greetingMessage: greeting,
       failureMessage: MENSAGEM_FALHA_CLIENTE,
       maxHistory: 15,
-      params: {
-        max_tokens: 1024,
-        temperature: 0.8,
-        top_p: 0.95,
-      },
+      params,
     });
+  }
+
+  if (!ferramenta) {
+    console.warn(
+      '[invite-agent] TOOL_BASE_URL e NEXT_LLM_URL vazios; consultarPolitica não roda nesta ligação',
+    );
   }
 
   return new OpenAI({
@@ -92,11 +85,8 @@ function buildBrain(greeting: string) {
     greetingMessage: greeting,
     failureMessage: MENSAGEM_FALHA_CLIENTE,
     maxHistory: 15,
-    params: {
-      max_tokens: 1024,
-      temperature: 0.8,
-      top_p: 0.95,
-    },
+    params,
+    ...(ferramenta ? { tools: [ferramenta] } : {}),
   });
 }
 
@@ -105,7 +95,7 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name, cenario_id } = body;
+    const { requester_id, channel_name, cenario_id, produto_id } = body;
 
     const appId = requireEnv('NEXT_PUBLIC_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
@@ -126,7 +116,13 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    const produto = await obterProduto(cenario.produtoId);
+    const produto = await obterProduto(produto_id || cenario.produtoId);
+    if (produto_id && !produto) {
+      return NextResponse.json(
+        { error: 'produto_id inválido' },
+        { status: 400 },
+      );
+    }
     const todosMateriais = await listarMateriais();
     const materiais: Material[] = produto
       ? todosMateriais.filter((m) => produto.materiais.includes(m.id))
@@ -156,14 +152,14 @@ export async function POST(request: NextRequest) {
           start_of_speech: {
             mode: 'vad',
             vad_config: {
-              interrupt_duration_ms: 160,
+              interrupt_duration_ms: INTERRUPT_MS,
               prefix_padding_ms: 300,
             },
           },
           end_of_speech: {
             mode: 'vad',
             vad_config: {
-              silence_duration_ms: Number(process.env.NEXT_SILENCE_MS ?? 480),
+              silence_duration_ms: silencioMs(),
             },
           },
         },

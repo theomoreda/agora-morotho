@@ -15,6 +15,8 @@ export interface ClientStartRequest {
    * O servidor monta as instruções do agente a partir dele.
    */
   cenario_id?: string | null;
+  /** Produto escolhido pelo vendedor. Sem ele, vale o produto do cenário. */
+  produto_id?: string | null;
 }
 
 export interface StopConversationRequest {

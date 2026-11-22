@@ -5,10 +5,14 @@ import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { obterCenario, registrarAvaliacao } from '@/lib/data-provider';
+import {
+  obterCenario,
+  obterProduto,
+  registrarAvaliacao,
+} from '@/lib/data-provider';
 import { avaliacaoDoVeredito } from '@/lib/avaliacao-from-veredito';
 import { VENDEDOR_ATUAL_ID } from '@/lib/sessao-demo';
-import type { Cenario, Veredito } from '@/lib/types';
+import type { Cenario, Produto, Veredito } from '@/lib/types';
 
 // VoiceSimulation é browser-only (RTC/RTM da Agora).
 const VoiceSimulation = dynamic(
@@ -35,15 +39,21 @@ function SimulacaoInner({ cenarioId }: { cenarioId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const atribuicaoId = searchParams.get('atribuicao');
+  const produtoId = searchParams.get('produto');
   const [cenario, setCenario] = useState<Cenario | null>(null);
+  const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    obterCenario(cenarioId).then((c) => {
+    Promise.all([
+      obterCenario(cenarioId),
+      produtoId ? obterProduto(produtoId) : Promise.resolve(null),
+    ]).then(([c, p]) => {
       setCenario(c);
+      setProduto(p);
       setLoading(false);
     });
-  }, [cenarioId]);
+  }, [cenarioId, produtoId]);
 
   // Fecha o loop: transforma o veredito em avaliação, persiste (marcando a
   // atribuição como concluída) e leva para a tela de resultado.
@@ -79,9 +89,27 @@ function SimulacaoInner({ cenarioId }: { cenarioId: string }) {
     );
   }
 
+  if (!produto) {
+    return (
+      <EmptyState
+        title="Escolha o produto antes de simular"
+        description="Volte para Minhas simulações e clique em Iniciar simulação."
+        action={
+          <Button variant="outline" onClick={() => router.push('/vendedor')}>
+            Voltar
+          </Button>
+        }
+      />
+    );
+  }
+
   return (
     <div className="-m-6 md:-m-8">
-      <VoiceSimulation cenario={cenario} onFinish={handleFinish} />
+      <VoiceSimulation
+        cenario={cenario}
+        produto={produto}
+        onFinish={handleFinish}
+      />
     </div>
   );
 }

@@ -61,6 +61,56 @@ const globalForStore = globalThis as unknown as { __unmuteStore?: Store };
 export const store: Store =
   globalForStore.__unmuteStore ?? (globalForStore.__unmuteStore = seed());
 
+/**
+ * Fixtures criados no código depois que o store já existia entram sem apagar
+ * o que foi gravado na sessão.
+ */
+function incluirFixturesNovos(): void {
+  const novo = seed();
+  for (const chave of Object.keys(novo) as (keyof Store)[]) {
+    const atual = store[chave] as { id: string }[];
+    const ids = new Set(atual.map((item) => item.id));
+    for (const item of novo[chave] as { id: string }[]) {
+      if (!ids.has(item.id)) atual.push(item);
+    }
+  }
+}
+
+incluirFixturesNovos();
+
+/** Substitui a rubrica padrão inteira (nomes, descrições e pesos). */
+export function salvarCriterios(criterios: Criterio[]): void {
+  store.criterios.splice(0, store.criterios.length, ...criterios);
+}
+
+/** Insere um material e o vincula aos produtos indicados. */
+export function salvarMaterial(material: Material, produtoIds: string[]): void {
+  store.materiais.push(material);
+  for (const produto of store.produtos) {
+    if (produtoIds.includes(produto.id) && !produto.materiais.includes(material.id)) {
+      produto.materiais = [...produto.materiais, material.id];
+    }
+  }
+}
+
+/** Remove um material e desfaz os vínculos com produtos. */
+export function removerMaterial(id: string): boolean {
+  const indice = store.materiais.findIndex((m) => m.id === id);
+  if (indice < 0) return false;
+  store.materiais.splice(indice, 1);
+  for (const produto of store.produtos) {
+    if (produto.materiais.includes(id)) {
+      produto.materiais = produto.materiais.filter((m) => m !== id);
+    }
+  }
+  return true;
+}
+
+/** Insere um produto novo. */
+export function salvarProduto(produto: Produto): void {
+  store.produtos.push(produto);
+}
+
 /** Insere uma avaliação e liga-a à atribuição (marcando como concluída). */
 export function salvarAvaliacao(
   avaliacao: Avaliacao,

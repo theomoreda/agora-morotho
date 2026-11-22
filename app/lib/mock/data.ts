@@ -1,7 +1,7 @@
 /**
  * Dados simulados da demo.
  *
- * Reproduz o roteiro de demonstração do projeto: 1 produto, 3 perfis de
+ * Reproduz o roteiro de demonstração do projeto: 2 produtos, 3 perfis de
  * cliente, 2 vendedores (um domina o produto, outro comete erros) e as
  * avaliações que o gestor compara. Tudo em memória — o `data-provider` lê daqui
  * hoje e, no futuro, do back-end.
@@ -81,6 +81,22 @@ export const MATERIAIS: Material[] = [
       'Etapas: abertura e rapport, descoberta de necessidades, demonstração focada na dor, contorno de objeções, proposta e fechamento. Sempre confirmar o próximo passo com data.',
     atualizadoEm: '2026-11-03',
   },
+  {
+    id: 'mat-catalogo-combo',
+    titulo: 'Catálogo — Combo Conecta Total',
+    tipo: 'catalogo',
+    conteudo:
+      'Combo Conecta Total: telefonia móvel, internet banda larga, TV por assinatura e streaming numa fatura só, por R$ 249,90/mês. Móvel: 1 linha 5G com 40 GB, ligações e WhatsApp ilimitados; linha adicional por R$ 39,90/mês, até 3 adicionais. Banda larga: fibra de 600 Mega com Wi-Fi 6 e instalação grátis. TV: 120 canais, sendo 80 em HD, com 1 ponto incluso; ponto adicional por R$ 19,90/mês. Streaming: Netflix padrão com anúncios e Globoplay inclusos. Separados, os quatro serviços custariam cerca de R$ 330/mês.',
+    atualizadoEm: '2026-11-22',
+  },
+  {
+    id: 'mat-politica-combo',
+    titulo: 'Política comercial — Combo Conecta Total',
+    tipo: 'politica',
+    conteudo:
+      'Fidelidade de 12 meses. Cancelamento antes disso cobra multa proporcional aos meses restantes. Desconto máximo de 10% na mensalidade nos 6 primeiros meses para quem traz a portabilidade da linha móvel. Não é possível retirar um serviço do combo para baixar o preço. A instalação da fibra é agendada em até 7 dias úteis, sujeita a cobertura no endereço.',
+    atualizadoEm: '2026-11-22',
+  },
 ];
 
 export const PRODUTOS: Produto[] = [
@@ -89,6 +105,13 @@ export const PRODUTOS: Produto[] = [
     nome: 'Plano Gestão 360',
     descricao: 'Software de gestão para pequenas e médias empresas.',
     materiais: ['mat-catalogo', 'mat-politica', 'mat-processo'],
+  },
+  {
+    id: 'prod-combo',
+    nome: 'Combo Conecta Total',
+    descricao:
+      'Plano de operadora com telefonia móvel, internet banda larga, TV por assinatura e streaming.',
+    materiais: ['mat-catalogo-combo', 'mat-politica-combo', 'mat-processo'],
   },
 ];
 
@@ -146,6 +169,42 @@ export const CENARIOS: Cenario[] = [
     criterios: CRITERIOS_PADRAO,
     criadoEm: '2026-11-11',
   },
+  {
+    id: 'cen-descoberta',
+    titulo: 'Descoberta de necessidades — O cliente que não sabe o que precisa',
+    produtoId: 'prod-gestao360',
+    perfilCliente: 'nao_sabe_o_que_precisa',
+    dificuldade: 'medio',
+    objetivo:
+      'Habilidade treinada: investigação e descoberta de necessidades. Identificar pelo menos três problemas reais do cliente, entender suas consequências e descobrir o que motivou a busca por uma solução.',
+    objecoes: [
+      'O sistema atual não é muito bom.',
+      'Ah, sei lá, acho que dá pra melhorar umas coisas.',
+      'Antes de ver o produto, não sei se é bem isso que eu preciso.',
+    ],
+    comportamento:
+      'Comunicativo, mas superficial: não sabe identificar exatamente seus problemas. No início responde de maneira genérica e diz que o sistema atual "não é muito bom". Só revela problemas específicos quando o vendedor faz perguntas sobre eles, um de cada vez. Problemas reais (não conte espontaneamente): 1) o estoque é controlado em planilha e vive desatualizado, então já venderam produto que não tinham; 2) o fechamento financeiro do mês leva quase uma semana porque é tudo conferido à mão; 3) a nota fiscal é emitida em outro sistema e redigitada, gerando erros. Consequências: clientes reclamando de atraso, horas extras da equipe e multa por nota errada. Motivação (só conta se perguntado diretamente por que está buscando agora): perdeu um cliente grande no mês passado por causa de um pedido sem estoque. Se o vendedor apresentar o produto antes de entender esses problemas, perca o interesse e responda de forma vaga e apressada.',
+    criterios: CRITERIOS_PADRAO,
+    criadoEm: '2026-11-22',
+  },
+  {
+    id: 'cen-fechamento',
+    titulo: 'Fechamento — O cliente interessado que não toma decisão',
+    produtoId: 'prod-gestao360',
+    perfilCliente: 'indeciso',
+    dificuldade: 'dificil',
+    objetivo:
+      'Habilidade treinada: técnicas de fechamento e identificação de barreiras ocultas. Descobrir o que impede a decisão e estabelecer um próximo passo concreto.',
+    objecoes: [
+      'Preciso conversar internamente antes.',
+      'Vamos ver, depois eu te retorno.',
+      'Não quero decidir nada com pressa.',
+    ],
+    comportamento:
+      'Educado, indeciso e avesso a decisões precipitadas. Gosta do produto e não apresenta objeções explícitas, mas evita assumir compromissos e diz que precisa conversar internamente. Não gosta de pressão comercial: se o vendedor insistir ou forçar o fechamento, fique mais reticente e encerre com "depois te retorno". Barreira oculta (só revele se o vendedor perguntar com cuidado o que falta para decidir ou quem mais participa da decisão): o sócio precisa aprovar e tem medo de que a migração dos dados pare a operação no fechamento do trimestre. Se o vendedor descobrir essa barreira e tratá-la, aceite um próximo passo concreto, como uma reunião com o sócio em data definida.',
+    criterios: CRITERIOS_PADRAO,
+    criadoEm: '2026-11-22',
+  },
 ];
 
 // ── Vendedores ──────────────────────────────────────────────────────────────
@@ -197,6 +256,38 @@ export const ATRIBUICOES: Atribuicao[] = [
     cenarioId: 'cen-caro',
     vendedorId: 'vend-bruno',
     prazo: '2026-11-28',
+    status: 'pendente',
+    avaliacaoId: null,
+  },
+  {
+    id: 'atr-5',
+    cenarioId: 'cen-descoberta',
+    vendedorId: 'vend-ana',
+    prazo: '2026-12-02',
+    status: 'pendente',
+    avaliacaoId: null,
+  },
+  {
+    id: 'atr-6',
+    cenarioId: 'cen-fechamento',
+    vendedorId: 'vend-ana',
+    prazo: '2026-12-04',
+    status: 'pendente',
+    avaliacaoId: null,
+  },
+  {
+    id: 'atr-7',
+    cenarioId: 'cen-descoberta',
+    vendedorId: 'vend-bruno',
+    prazo: '2026-12-02',
+    status: 'pendente',
+    avaliacaoId: null,
+  },
+  {
+    id: 'atr-8',
+    cenarioId: 'cen-fechamento',
+    vendedorId: 'vend-bruno',
+    prazo: '2026-12-04',
     status: 'pendente',
     avaliacaoId: null,
   },

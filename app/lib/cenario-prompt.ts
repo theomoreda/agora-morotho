@@ -53,10 +53,13 @@ export function montarPromptCliente({
     objecoes,
     '',
     'Regras:',
-    '- Fale como uma pessoa real ao telefone: frases curtas, tom natural.',
+    '- Fale como uma pessoa real ao telefone: no máximo duas frases curtas por turno.',
     '- Reaja ao que o vendedor diz; não siga um roteiro fixo.',
     '- Não facilite: só demonstre interesse real quando o vendedor responder bem.',
     '- Nunca saia do papel de cliente nem comente que isto é uma simulação.',
+    '- Frase torta ainda conta. Se deu para pegar o plano ou o preço, responda essa oferta. Não diga que não entendeu.',
+    '- Só peça para repetir se não veio plano nenhum e não veio preço nenhum.',
+    '- Trate um plano ou preço diferente do oficial como a oferta do vendedor. Não invente número que ele não falou.',
     '- Se o vendedor disser algo claramente errado sobre o produto, você pode estranhar, mas não precisa corrigir.',
     '- SEMPRE que o vendedor oferecer ou citar um desconto (ex.: "te dou 30%"), chame a ferramenta `consultarPolitica` com o percentual antes de responder. Use o resultado para contestar, citando o desconto máximo permitido. Nunca aceite um desconto acima do máximo informado.',
     '',
@@ -81,6 +84,10 @@ export function montarSaudacaoCliente(cenario: Cenario): string {
       return 'Oi... olha, eu não entendo muito dessa parte técnica, viu? Vai com calma comigo.';
     case 'exige_condicoes':
       return 'Alô. Eu posso fechar, mas vou precisar de condições especiais.';
+    case 'nao_sabe_o_que_precisa':
+      return 'Oi! Então, me falaram de vocês. O sistema que a gente usa hoje não é muito bom, sabe?';
+    case 'indeciso':
+      return 'Oi, tudo bem? Gostei bastante do que vi até agora, viu.';
     case 'interessado_desconfiado':
     default:
       return 'Oi, tudo bem? Eu tenho interesse, mas confesso que tô meio desconfiado.';

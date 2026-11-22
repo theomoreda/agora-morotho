@@ -7,22 +7,30 @@ import { AssignmentCard } from '@/components/vendedor/AssignmentCard';
 import {
   listarAtribuicoesDoVendedor,
   listarCenarios,
+  listarMateriais,
+  listarProdutos,
 } from '@/lib/data-provider';
 import { VENDEDOR_ATUAL_ID } from '@/lib/sessao-demo';
-import type { Atribuicao, Cenario } from '@/lib/types';
+import type { Atribuicao, Cenario, Material, Produto } from '@/lib/types';
 
 export default function VendedorHome() {
   const [atribuicoes, setAtribuicoes] = useState<Atribuicao[]>([]);
   const [cenarios, setCenarios] = useState<Cenario[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [materiais, setMateriais] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       listarAtribuicoesDoVendedor(VENDEDOR_ATUAL_ID),
       listarCenarios(),
-    ]).then(([at, c]) => {
+      listarProdutos(),
+      listarMateriais(),
+    ]).then(([at, c, p, m]) => {
       setAtribuicoes(at);
       setCenarios(c);
+      setProdutos(p);
+      setMateriais(m);
       setLoading(false);
     });
   }, []);
@@ -57,6 +65,8 @@ export default function VendedorHome() {
                       key={at.id}
                       atribuicao={at}
                       cenario={cenario}
+                      produtos={produtos}
+                      materiais={materiais}
                     />
                   );
                 })}
@@ -78,6 +88,8 @@ export default function VendedorHome() {
                       key={at.id}
                       atribuicao={at}
                       cenario={cenario}
+                      produtos={produtos}
+                      materiais={materiais}
                     />
                   );
                 })}

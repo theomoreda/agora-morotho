@@ -4,10 +4,11 @@ import { Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DifficultyTag } from '@/components/shared/DifficultyTag';
 import { PERFIL_CLIENTE_LABEL } from '@/lib/types';
-import type { Cenario } from '@/lib/types';
+import type { Cenario, Produto } from '@/lib/types';
 
 type PreCallScenarioCardProps = {
   cenario: Cenario;
+  produto: Produto;
   isLoading: boolean;
   error: string | null;
   onStartConversation: () => void;
@@ -19,6 +20,7 @@ type PreCallScenarioCardProps = {
  */
 export function PreCallScenarioCard({
   cenario,
+  produto,
   isLoading,
   error,
   onStartConversation,
@@ -43,6 +45,10 @@ export function PreCallScenarioCard({
       </h1>
 
       <dl className="mt-5 space-y-3 text-sm">
+        <div>
+          <dt className="text-muted-foreground">Produto</dt>
+          <dd className="text-white">{produto.nome}</dd>
+        </div>
         <div>
           <dt className="text-muted-foreground">Perfil do cliente</dt>
           <dd className="text-white">
