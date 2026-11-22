@@ -3,7 +3,7 @@ import { DIFICULDADE_LABEL } from '@/lib/types';
 import type { Dificuldade } from '@/lib/types';
 
 const CLASSES: Record<Dificuldade, string> = {
-  facil: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  facil: 'bg-success/15 text-success border-success/30',
   medio: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
   dificil: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
 };

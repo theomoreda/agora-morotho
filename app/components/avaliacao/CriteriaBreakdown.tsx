@@ -9,25 +9,23 @@ export function CriteriaBreakdown({ notas }: { notas: NotaCriterio[] }) {
     <div className="space-y-4">
       {notas.map((n) => (
         <Card key={n.criterioId}>
-          <div className="mb-2 flex items-center justify-between gap-4">
+          <div className="mb-3 flex items-center justify-between gap-4">
             <div>
-              <h4 className="text-sm font-medium text-white">
-                {n.criterioNome}
-              </h4>
-              <p className="text-xs text-muted-foreground">Peso {n.peso}%</p>
+              <h3 className="type-card-title">{n.criterioNome}</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">Peso {n.peso}%</p>
             </div>
-            <span className={cn('text-lg font-semibold', scoreColor(n.nota))}>
+            <span className={cn('font-display text-2xl font-semibold', scoreColor(n.nota))}>
               {Math.round(n.nota)}
             </span>
           </div>
 
           {/* Barra de progresso */}
-          <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-border">
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-border">
             <div
               className={cn(
                 'h-full rounded-full',
                 n.nota >= 80
-                  ? 'bg-emerald-400'
+                  ? 'bg-success'
                   : n.nota >= 60
                     ? 'bg-amber-400'
                     : 'bg-rose-400',
@@ -37,7 +35,7 @@ export function CriteriaBreakdown({ notas }: { notas: NotaCriterio[] }) {
           </div>
 
           {n.comentario && (
-            <p className="mb-2 text-sm text-muted-foreground">{n.comentario}</p>
+            <p className="mb-3 text-sm leading-relaxed text-muted-foreground">{n.comentario}</p>
           )}
 
           {n.evidencias.length > 0 && (

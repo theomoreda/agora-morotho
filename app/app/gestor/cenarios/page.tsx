@@ -44,7 +44,7 @@ export default function CenariosPage() {
           description="Crie o primeiro cenário para começar a treinar a equipe."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           {cenarios.map((c) => (
             <ScenarioCard key={c.id} cenario={c} />
           ))}

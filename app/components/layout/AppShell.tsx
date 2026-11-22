@@ -28,7 +28,7 @@ export function AppShell({ title, subtitle, nav, children }: AppShellProps) {
     <div className="flex min-h-dvh bg-background text-foreground">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card/40 p-4 md:flex">
         <div className="mb-6 px-2">
-          <p className="text-sm font-semibold text-white">{title}</p>
+          <p className="font-display text-base font-semibold text-foreground">{title}</p>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
 
@@ -47,8 +47,8 @@ export function AppShell({ title, subtitle, nav, children }: AppShellProps) {
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
                   active
-                    ? 'bg-primary/15 font-medium text-white'
-                    : 'text-muted-foreground hover:bg-card hover:text-white',
+                    ? 'bg-primary/15 font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-card hover:text-foreground',
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -60,7 +60,7 @@ export function AppShell({ title, subtitle, nav, children }: AppShellProps) {
 
         <Link
           href="/"
-          className="mt-4 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-card hover:text-white"
+          className="mt-4 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
         >
           ← Trocar de perfil
         </Link>
@@ -78,7 +78,7 @@ export function AppShell({ title, subtitle, nav, children }: AppShellProps) {
                 className={cn(
                   'whitespace-nowrap rounded-full border px-3 py-1 text-xs',
                   active
-                    ? 'border-primary bg-primary/15 text-white'
+                    ? 'border-primary bg-primary/15 text-foreground'
                     : 'border-border text-muted-foreground',
                 )}
               >

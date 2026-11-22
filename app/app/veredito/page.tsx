@@ -36,24 +36,22 @@ export default function VeredictoPage() {
   return (
     <main className="min-h-dvh bg-background px-4 py-10 text-foreground">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-6">
+        <div className="mb-10">
           <Link
             href="/"
-            className="text-xs text-muted-foreground hover:text-white"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             ← Início
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-white">
-            Veredito da conversa
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="type-page-title mt-3">Veredito da conversa</h1>
+          <p className="mt-2 text-base leading-relaxed text-muted-foreground">
             Cole a conversa (ou use o exemplo) e avalie. O veredito diz se o
             vendedor está apto, qual dos dois critérios falhou e a frase que
             causou a reprovação. Funciona sem microfone.
           </p>
         </div>
 
-        <Card className="space-y-3">
+        <Card className="space-y-4">
           <label htmlFor="conversa" className="text-xs text-muted-foreground">
             Conversa (formato “Vendedor: ...” / “Cliente: ...”)
           </label>
@@ -63,7 +61,7 @@ export default function VeredictoPage() {
             onChange={(e) => setTexto(e.target.value)}
             rows={12}
             placeholder={'Vendedor: ...\nCliente: ...'}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm text-white outline-none focus:border-primary"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-primary"
           />
           <div className="flex flex-wrap gap-2">
             <Button onClick={avaliar} disabled={texto.trim().length === 0}>
@@ -81,7 +79,7 @@ export default function VeredictoPage() {
         </Card>
 
         {veredito && (
-          <div className="mt-6">
+          <div className="mt-10">
             <VerdictCard veredito={veredito} />
           </div>
         )}

@@ -10,11 +10,11 @@ import { CRITERIO_VEREDITO_LABEL, type Veredito } from '@/lib/types';
 export function VerdictCard({ veredito }: { veredito: Veredito }) {
   if (veredito.apto) {
     return (
-      <Card className="border-emerald-500/30 bg-emerald-500/5">
+      <Card className="border-success/30 bg-success/5">
         <div className="flex items-center gap-3">
-          <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+          <CheckCircle2 className="h-8 w-8 text-success" />
           <div>
-            <p className="text-lg font-semibold text-emerald-400">Apto</p>
+            <p className="font-display text-xl font-semibold text-success">Apto</p>
             <p className="text-sm text-muted-foreground">
               Nenhum dos dois critérios foi violado.
             </p>
@@ -29,14 +29,14 @@ export function VerdictCard({ veredito }: { veredito: Veredito }) {
       <div className="flex items-start gap-3">
         <XCircle className="mt-0.5 h-8 w-8 shrink-0 text-rose-400" />
         <div className="min-w-0">
-          <p className="text-lg font-semibold text-rose-400">Não apto</p>
+          <p className="font-display text-xl font-semibold text-rose-400">Não apto</p>
 
           {veredito.criterioFalho && (
             <div className="mt-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 Critério que falhou
               </p>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-medium text-foreground">
                 {CRITERIO_VEREDITO_LABEL[veredito.criterioFalho]}
               </p>
             </div>
@@ -50,7 +50,7 @@ export function VerdictCard({ veredito }: { veredito: Veredito }) {
               <blockquote
                 className={cn(
                   'mt-1 rounded-lg border border-rose-500/30 bg-background px-3 py-2',
-                  'text-sm italic text-white',
+                  'text-sm italic text-foreground',
                 )}
               >
                 “{veredito.frase}”

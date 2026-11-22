@@ -13,29 +13,29 @@ export function TeamOverviewCard({
   mediaEquipe,
 }: TeamOverviewCardProps) {
   return (
-    <Card>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white">Desempenho da equipe</h3>
+    <section>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="type-section-title">Desempenho da equipe</h2>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           Média geral
           <ScoreBadge nota={mediaEquipe} />
         </div>
       </div>
-      <div className="space-y-2">
+      <Card className="space-y-1 p-3">
         {vendedores.map((v) => (
           <Link
             key={v.id}
             href={`/gestor/vendedores/${v.id}`}
-            className="flex items-center justify-between gap-4 rounded-lg px-2 py-2 transition-colors hover:bg-card"
+            className="flex items-center justify-between gap-4 rounded-lg px-3 py-3 transition-colors hover:bg-card"
           >
             <div>
-              <p className="text-sm font-medium text-white">{v.nome}</p>
-              <p className="text-xs text-muted-foreground">{v.email}</p>
+              <p className="text-sm font-medium text-foreground">{v.nome}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{v.email}</p>
             </div>
             <ScoreBadge nota={v.mediaGeral} />
           </Link>
         ))}
-      </div>
-    </Card>
+      </Card>
+    </section>
   );
 }

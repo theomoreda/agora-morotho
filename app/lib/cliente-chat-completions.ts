@@ -18,6 +18,10 @@ type CorpoChat = {
   messages?: MensagemChat[];
   model?: string;
   stream?: boolean;
+  temperature?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
   [chave: string]: unknown;
 };
 
@@ -92,6 +96,10 @@ export async function clienteChatCompletions(
     messages: mensagens as NonNullable<
       Parameters<typeof streamText>[0]['messages']
     >,
+    temperature: corpo.temperature ?? 0.8,
+    topP: corpo.top_p,
+    frequencyPenalty: corpo.frequency_penalty ?? 0.6,
+    presencePenalty: corpo.presence_penalty ?? 0.4,
     tools: ferramentasDoCliente(),
     // Deixa o cliente chamar a ferramenta e depois falar, no mesmo turno.
     stopWhen: stepCountIs(MAX_PASSOS),

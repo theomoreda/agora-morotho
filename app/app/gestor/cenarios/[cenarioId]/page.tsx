@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { PageHeader, SectionHeader } from '@/components/shared/PageHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DifficultyTag } from '@/components/shared/DifficultyTag';
@@ -55,8 +55,8 @@ export default function CenarioDetalhePage({
         action={<DifficultyTag dificuldade={cenario.dificuldade} />}
       />
 
-      <div className="space-y-6">
-        <Card className="space-y-3">
+      <div className="page-sections">
+        <Card className="space-y-5">
           <Field
             label="Perfil do cliente"
             value={PERFIL_CLIENTE_LABEL[cenario.perfilCliente]}
@@ -65,26 +65,24 @@ export default function CenarioDetalhePage({
           <Field label="Comportamento esperado" value={cenario.comportamento} />
         </Card>
 
-        <Card>
-          <h3 className="mb-3 text-sm font-semibold text-white">Objeções</h3>
-          <ul className="space-y-2">
+        <section>
+          <SectionHeader title="Objeções" />
+          <ul className="space-y-3">
             {cenario.objecoes.map((o, i) => (
               <li
                 key={i}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground"
+                className="rounded-lg border border-highlight/30 border-l-2 border-l-highlight bg-background px-4 py-3 text-sm leading-relaxed text-muted-foreground"
               >
                 {o}
               </li>
             ))}
           </ul>
-        </Card>
+        </section>
 
-        <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">
-            Critérios de avaliação
-          </h3>
+        <section>
+          <SectionHeader title="Critérios de avaliação" />
           <RubricEditor criterios={cenario.criterios} readOnly />
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -93,8 +91,8 @@ export default function CenarioDetalhePage({
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm text-white">{value}</p>
+      <p className="type-label">{label}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-foreground">{value}</p>
     </div>
   );
 }

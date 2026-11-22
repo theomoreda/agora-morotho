@@ -12,10 +12,11 @@ import type {
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { PreCallScenarioCard } from './PreCallScenarioCard';
-import { VerdictCard } from '@/components/veredito/VerdictCard';
+import { SessionReport } from './SessionReport';
 import { Button } from '@/components/ui/button';
-import { avaliarTurnos } from '@/lib/veredito';
-import type { Cenario, Turno, Veredito } from '@/lib/types';
+import { analisarSessao } from '@/lib/analise-sessao';
+import { planoDoProduto } from '@/lib/plano';
+import type { AnaliseSessao, Cenario, Produto, Turno } from '@/lib/types';
 
 // Dynamically import the ConversationComponent with ssr disabled
 const ConversationComponent = dynamic(
@@ -58,20 +59,23 @@ const AgoraProvider = dynamic(
 
 type VoiceSimulationProps = {
   cenario: Cenario;
+  /** Produto escolhido pelo vendedor; substitui o produto do cenário. */
+  produto: Produto;
   /**
-   * Chamado quando o vendedor conclui a tela de veredito. Recebe o veredito
-   * calculado para que a página possa persistir a avaliação.
+   * Chamado quando o vendedor conclui a tela de desempenho. Recebe a análise
+   * calculada para que a página possa persistir a avaliação.
    */
-  onFinish?: (veredito: Veredito | null) => void;
+  onFinish?: (analise: AnaliseSessao | null) => void;
 };
 
 /**
  * Simulação de voz: reusa o encanamento RTC/RTM/ConvoAI da Agora, parametrizado
- * pelo cenário. O `cenario.id` é enviado ao `invite-agent`, que monta a persona
- * do cliente virtual.
+ * pelo cenário. O `cenario.id` e o `produto.id` são enviados ao `invite-agent`,
+ * que monta a persona do cliente virtual.
  */
 export default function VoiceSimulation({
   cenario,
+  produto,
   onFinish,
 }: VoiceSimulationProps) {
   const [showConversation, setShowConversation] = useState(false);
@@ -87,8 +91,8 @@ export default function VoiceSimulation({
   const [agoraData, setAgoraData] = useState<AgoraTokenData | null>(null);
   const [rtmClient, setRtmClient] = useState<RTMClient | null>(null);
   const [agentJoinError, setAgentJoinError] = useState(false);
-  // Veredito pós-chamada, calculado quando a conversa encerra.
-  const [veredito, setVeredito] = useState<Veredito | null>(null);
+  // Desempenho pós-chamada, calculado quando a conversa encerra.
+  const [analise, setAnalise] = useState<AnaliseSessao | null>(null);
 
   const handleStartConversation = async () => {
     setIsLoading(true);
@@ -115,6 +119,7 @@ export default function VoiceSimulation({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
             cenario_id: cenario.id,
+            produto_id: produto.id,
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -188,9 +193,10 @@ export default function VoiceSimulation({
     [agoraData],
   );
 
-  const handleEndConversation = async (turnos: Turno[]) => {
-    // Veredito pós-chamada a partir dos turnos atribuídos da transcrição.
-    setVeredito(avaliarTurnos(turnos));
+  const handleEndConversation = async (turnos: Turno[], duracaoSeg: number) => {
+    setAnalise(
+      analisarSessao({ turnos, duracaoSeg, politica: planoDoProduto(produto) }),
+    );
 
     // Stop the AI agent
     if (agoraData?.agentId) {
@@ -212,7 +218,7 @@ export default function VoiceSimulation({
     rtmClient?.logout().catch((err) => console.error('RTM logout error:', err));
     setRtmClient(null);
     setShowConversation(false);
-    // Não navega embora ainda: mostra o veredito e deixa o usuário sair depois.
+    // Não navega embora ainda: mostra o desempenho e deixa o usuário sair depois.
   };
 
   return (
@@ -231,19 +237,21 @@ export default function VoiceSimulation({
               : 'w-full max-w-none items-center justify-center px-4 text-center'
           }`}
         >
-          {veredito && !showConversation ? (
-            <div className="mx-auto w-[min(92vw,30rem)] space-y-4 text-left">
-              <h2 className="text-lg font-semibold text-white">
-                Veredito da simulação
-              </h2>
-              <VerdictCard veredito={veredito} />
-              <Button className="w-full" onClick={() => onFinish?.(veredito)}>
-                Concluir
+          {analise && !showConversation ? (
+            <div className="mx-auto max-h-dvh w-[min(94vw,48rem)] space-y-8 overflow-y-auto py-10 text-left">
+              <h2 className="type-page-title">Desempenho da simulação</h2>
+              <SessionReport analise={analise} />
+              <Button
+                className="w-full"
+                onClick={() => onFinish?.(analise.avaliavel ? analise : null)}
+              >
+                {analise.avaliavel ? 'Concluir' : 'Voltar sem registrar'}
               </Button>
             </div>
           ) : !showConversation ? (
             <PreCallScenarioCard
               cenario={cenario}
+              produto={produto}
               isLoading={isLoading}
               error={error}
               onStartConversation={handleStartConversation}

@@ -82,8 +82,8 @@ export function QuickstartTranscriptPanel({
                 <div
                   className={`max-w-full whitespace-pre-wrap rounded-xl border px-3 py-2 text-sm leading-6 ${
                     isAgent
-                      ? 'border-[#2f2f2f] bg-[#212121] text-[#e7e7e7]'
-                      : 'border-[#d7d7d7] bg-[#fdfcfb] text-black'
+                      ? 'border-highlight/40 bg-highlight/10 text-foreground'
+                      : 'border-border bg-card text-foreground'
                   }`}
                 >
                   {text || '...'}

@@ -1,11 +1,11 @@
 'use client';
 
-import { Headphones, History } from 'lucide-react';
+import { Headphones, TrendingUp } from 'lucide-react';
 import { AppShell, type NavItem } from '@/components/layout/AppShell';
 
 const NAV: NavItem[] = [
   { href: '/vendedor', label: 'Minhas simulações', icon: Headphones },
-  { href: '/vendedor/historico', label: 'Histórico', icon: History },
+  { href: '/vendedor/desempenho', label: 'Desempenho', icon: TrendingUp },
 ];
 
 export default function VendedorLayout({

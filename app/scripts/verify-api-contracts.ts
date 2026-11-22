@@ -14,6 +14,8 @@ function getJson(response: Response) {
 
 process.env.NEXT_PUBLIC_AGORA_APP_ID = '0123456789abcdef0123456789abcdef';
 process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
+process.env.PROSA_FISH_API_KEY ??= 'chave-de-teste';
+process.env.PROSA_FISH_VOICE_ID ??= 'voz-de-teste';
 
 async function verifyGenerateAgoraTokenRoute() {
   const { GET: generateAgoraToken } =
@@ -333,6 +335,30 @@ async function verifyInviteAgentInvalidCenario() {
   );
 }
 
+async function verifyInviteAgentInvalidProduto() {
+  const { POST: inviteAgent } = await import('../app/api/invite-agent/route');
+  const request = new NextRequest('http://localhost:3000/api/invite-agent', {
+    body: JSON.stringify({
+      requester_id: 'user-4321',
+      channel_name: 'test-channel',
+      cenario_id: 'cen-desconfiado',
+      produto_id: 'nao-existe',
+    }),
+    method: 'POST',
+  });
+  const response = await inviteAgent(request);
+  const body = await getJson(response);
+
+  assert(
+    response.status === 400,
+    'POST /api/invite-agent should reject an unknown produto_id',
+  );
+  assert(
+    body.error === 'produto_id inválido',
+    'POST /api/invite-agent should explain an invalid produto_id',
+  );
+}
+
 async function verifyInviteAgentSuccess() {
   const { POST: inviteAgent } = await import('../app/api/invite-agent/route');
   const originalCreateSession = Agent.prototype.createSession;
@@ -477,6 +503,7 @@ async function main() {
   await verifyChatCompletionsSseDone();
   await verifyInviteAgentValidation();
   await verifyInviteAgentInvalidCenario();
+  await verifyInviteAgentInvalidProduto();
   await verifyInviteAgentSuccess();
   await verifyStopConversationValidation();
   await verifyStopConversationSuccess();

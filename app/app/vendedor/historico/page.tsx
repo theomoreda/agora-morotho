@@ -55,7 +55,7 @@ export default function HistoricoPage() {
               className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-card"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-foreground">
                   {cenarioNome(a.cenarioId)}
                 </p>
                 <p className="text-xs text-muted-foreground">

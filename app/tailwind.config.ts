@@ -13,6 +13,7 @@ const config: Config = {
   	extend: {
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
       },
   		colors: {
         // The <alpha-value> placeholder enables Tailwind opacity modifiers like
@@ -43,6 +44,14 @@ const config: Config = {
   			accent: {
   				DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
   				foreground: 'hsl(var(--accent-foreground) / <alpha-value>)'
+  			},
+  			highlight: {
+  				DEFAULT: 'hsl(var(--highlight) / <alpha-value>)',
+  				foreground: 'hsl(var(--highlight-foreground) / <alpha-value>)'
+  			},
+  			success: {
+  				DEFAULT: 'hsl(var(--success) / <alpha-value>)',
+  				foreground: 'hsl(var(--success-foreground) / <alpha-value>)'
   			},
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
